@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.0.0",
   "description": "Blog technique francophone - elegartech.fr",
-  "author": "Alexandre Bergé",
+  "author": "Alexandre Berge",
   "license": "MIT",
   "scripts": {
     "dev": "astro dev",
