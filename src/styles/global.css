@@ -143,6 +143,68 @@
   }
 }
 
+/* Prose overrides for light mode */
+[data-theme="light"] .prose {
+  --tw-prose-body: #1F2328;
+  --tw-prose-headings: #1F2328;
+  --tw-prose-lead: #656D76;
+  --tw-prose-links: #0969DA;
+  --tw-prose-bold: #1F2328;
+  --tw-prose-counters: #656D76;
+  --tw-prose-bullets: #8C959F;
+  --tw-prose-hr: #D0D7DE;
+  --tw-prose-quotes: #1F2328;
+  --tw-prose-quote-borders: #0969DA;
+  --tw-prose-captions: #656D76;
+  --tw-prose-code: #1A7F37;
+  --tw-prose-pre-code: #1F2328;
+  --tw-prose-pre-bg: #F6F8FA;
+  --tw-prose-th-borders: #D0D7DE;
+  --tw-prose-td-borders: #D0D7DE;
+  color: #1F2328;
+}
+
+[data-theme="light"] .prose strong {
+  color: #1F2328;
+}
+
+[data-theme="light"] .prose em {
+  color: #1F2328;
+}
+
+[data-theme="light"] .prose h1,
+[data-theme="light"] .prose h2,
+[data-theme="light"] .prose h3,
+[data-theme="light"] .prose h4 {
+  color: #1F2328;
+}
+
+[data-theme="light"] .prose blockquote {
+  color: #1F2328;
+  border-left-color: #0969DA;
+}
+
+[data-theme="light"] .prose a {
+  color: #0969DA;
+}
+
+[data-theme="light"] .prose a:hover {
+  color: #1A7F37;
+}
+
+[data-theme="light"] .prose thead th,
+[data-theme="light"] .prose tbody td {
+  color: #1F2328;
+}
+
+[data-theme="light"] .prose li {
+  color: #1F2328;
+}
+
+[data-theme="light"] .prose p {
+  color: #1F2328;
+}
+
 @layer utilities {
   /* Hide scrollbar but keep functionality */
   .scrollbar-hide {
