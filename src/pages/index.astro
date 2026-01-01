@@ -1,0 +1,110 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@layouts/BaseLayout.astro';
+import ArticleCard from '@components/ArticleCard.astro';
+import Newsletter from '@components/Newsletter.astro';
+
+const allPosts = await getCollection('blog', ({ data }) => {
+  return !data.draft && data.date <= new Date();
+});
+
+const sortedPosts = allPosts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const featuredPosts = sortedPosts.filter((post) => post.data.featured);
+const recentPosts = sortedPosts.slice(0, 6);
+
+const categories = [
+  { slug: 'ia', label: 'IA', icon: '🤖' },
+  { slug: 'open-source', label: 'Open Source', icon: '🌐' },
+  { slug: 'developpement', label: 'Développement', icon: '💻' },
+  { slug: 'systemes', label: 'Systèmes', icon: '🖥️' },
+  { slug: 'securite', label: 'Sécurité', icon: '🔒' },
+  { slug: 'analyses', label: 'Analyses', icon: '📊' },
+];
+---
+
+<BaseLayout title="ElegarTech">
+  <!-- Hero -->
+  <section class="py-16 md:py-24 px-4">
+    <div class="max-w-4xl mx-auto text-center">
+      <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+        <span class="text-gradient">&lt;ElegarTech /&gt;</span>
+      </h1>
+      <p class="text-xl text-[var(--text-secondary)] max-w-2xl mx-auto mb-8">
+        Blog technique francophone. Analyses et actualités pour les passionnés de tech.
+      </p>
+      <div class="flex flex-wrap justify-center gap-3">
+        {categories.slice(0, 4).map((cat) => (
+          <a
+            href={`/categories/${cat.slug}`}
+            class="px-4 py-2 rounded-full bg-[var(--bg-secondary)] border border-[var(--code-border)] hover:border-[var(--accent-primary)] transition-colors"
+          >
+            <span class="mr-1.5">{cat.icon}</span>
+            {cat.label}
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured posts -->
+  {featuredPosts.length > 0 && (
+    <section class="py-12 px-4 bg-[var(--bg-secondary)]">
+      <div class="max-w-6xl mx-auto">
+        <h2 class="text-2xl font-bold mb-8">À la une</h2>
+        <div class="grid md:grid-cols-2 gap-6">
+          {featuredPosts.slice(0, 2).map((post) => (
+            <ArticleCard post={post} />
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Recent posts -->
+  <section class="py-12 px-4">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex items-center justify-between mb-8">
+        <h2 class="text-2xl font-bold">Articles récents</h2>
+        <a
+          href="/categories/actualites"
+          class="text-sm text-[var(--accent-primary)] hover:underline"
+        >
+          Voir tous →
+        </a>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {recentPosts.map((post) => (
+          <ArticleCard post={post} />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories -->
+  <section class="py-12 px-4 bg-[var(--bg-secondary)]">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-2xl font-bold mb-8">Catégories</h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {categories.map((cat) => (
+          <a
+            href={`/categories/${cat.slug}`}
+            class="p-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--code-border)] hover:border-[var(--accent-primary)] transition-colors text-center group"
+          >
+            <span class="text-2xl mb-2 block">{cat.icon}</span>
+            <span class="text-sm font-medium group-hover:text-[var(--accent-primary)] transition-colors">
+              {cat.label}
+            </span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Newsletter -->
+  <section class="py-12 px-4">
+    <div class="max-w-2xl mx-auto">
+      <Newsletter />
+    </div>
+  </section>
+</BaseLayout>

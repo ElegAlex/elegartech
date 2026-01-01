@@ -1,0 +1,49 @@
+---
+interface Props {
+  type?: 'info' | 'warning' | 'error' | 'success';
+  title?: string;
+}
+
+const { type = 'info', title } = Astro.props;
+
+const styles = {
+  info: {
+    bg: 'bg-[var(--accent-primary)]/10',
+    border: 'border-[var(--accent-primary)]',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>`,
+    iconColor: 'text-[var(--accent-primary)]',
+  },
+  warning: {
+    bg: 'bg-[var(--accent-warning)]/10',
+    border: 'border-[var(--accent-warning)]',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`,
+    iconColor: 'text-[var(--accent-warning)]',
+  },
+  error: {
+    bg: 'bg-[var(--accent-error)]/10',
+    border: 'border-[var(--accent-error)]',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>`,
+    iconColor: 'text-[var(--accent-error)]',
+  },
+  success: {
+    bg: 'bg-[var(--accent-success)]/10',
+    border: 'border-[var(--accent-success)]',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>`,
+    iconColor: 'text-[var(--accent-success)]',
+  },
+};
+
+const style = styles[type];
+---
+
+<aside class={`callout my-6 p-4 rounded-lg border-l-4 ${style.bg} ${style.border}`}>
+  <div class="flex gap-3">
+    <div class={`flex-shrink-0 ${style.iconColor}`} set:html={style.icon} />
+    <div class="flex-1 min-w-0">
+      {title && <p class="font-semibold mb-1">{title}</p>}
+      <div class="text-sm text-[var(--text-secondary)] [&>p]:m-0">
+        <slot />
+      </div>
+    </div>
+  </div>
+</aside>

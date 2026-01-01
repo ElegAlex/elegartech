@@ -1,0 +1,39 @@
+---
+// Buttondown configuration
+const buttondownUsername = 'elegartech'; // TODO: Replace with actual username
+---
+
+<section class="newsletter p-6 rounded-xl bg-gradient-to-br from-[var(--accent-primary)]/10 to-[var(--accent-success)]/10 border border-[var(--code-border)]">
+  <div class="max-w-md">
+    <h3 class="text-lg font-bold mb-2">Newsletter</h3>
+    <p class="text-sm text-[var(--text-secondary)] mb-4">
+      Recevez les derniers articles directement dans votre boîte mail. Pas de spam, promis.
+    </p>
+
+    <form
+      action={`https://buttondown.email/api/emails/embed-subscribe/${buttondownUsername}`}
+      method="post"
+      target="_blank"
+      class="flex flex-col sm:flex-row gap-2"
+    >
+      <input
+        type="email"
+        name="email"
+        placeholder="votre@email.com"
+        required
+        class="flex-1 px-4 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--code-border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
+      />
+      <button
+        type="submit"
+        class="px-6 py-2.5 rounded-lg bg-[var(--accent-primary)] text-white font-medium hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:ring-offset-2 focus:ring-offset-[var(--bg-primary)]"
+      >
+        S'abonner
+      </button>
+    </form>
+
+    <p class="text-xs text-[var(--text-muted)] mt-3">
+      En vous inscrivant, vous acceptez de recevoir des emails occasionnels.
+      Désabonnement possible à tout moment.
+    </p>
+  </div>
+</section>

@@ -1,0 +1,50 @@
+name: PR Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          # Use preview URL for builds
+          SITE: https://elegartech-pr-${{ github.event.pull_request.number }}.surge.sh
+
+      - name: Run Pagefind
+        run: npx pagefind --site dist
+
+      - name: Deploy to Surge
+        uses: afc163/surge-preview@main
+        id: preview
+        with:
+          surge_token: ${{ secrets.SURGE_TOKEN }}
+          dist: dist
+          teardown: true
+          build: echo "Already built"
+
+      - name: Comment Preview URL
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 **Preview deployed!**\n\n🔗 ${{ steps.preview.outputs.preview_url }}\n\nThis preview will be automatically removed when the PR is closed.`
+            })

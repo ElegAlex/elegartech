@@ -1,0 +1,80 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+import Search from './Search.astro';
+
+const navLinks = [
+  { href: '/', label: 'Accueil' },
+  { href: '/categories/ia', label: 'IA' },
+  { href: '/categories/open-source', label: 'Open Source' },
+  { href: '/categories/developpement', label: 'Dev' },
+  { href: '/categories/systemes', label: 'Systèmes' },
+];
+---
+
+<header class="sticky top-0 z-50 bg-[var(--bg-primary)]/95 backdrop-blur border-b border-[var(--code-border)]">
+  <nav class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+    <!-- Logo -->
+    <a href="/" class="flex items-center gap-2 font-bold text-xl hover:text-[var(--accent-primary)] transition-colors">
+      <span class="text-[var(--accent-primary)]">&lt;</span>
+      <span>ElegarTech</span>
+      <span class="text-[var(--accent-primary)]">/&gt;</span>
+    </a>
+
+    <!-- Desktop nav -->
+    <div class="hidden md:flex items-center gap-6">
+      {navLinks.map((link) => (
+        <a
+          href={link.href}
+          class="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+        >
+          {link.label}
+        </a>
+      ))}
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-3">
+      <Search />
+      <ThemeToggle />
+
+      <!-- Mobile menu button -->
+      <button
+        id="mobile-menu-btn"
+        class="md:hidden p-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
+        aria-label="Menu"
+        aria-expanded="false"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" x2="20" y1="12" y2="12" />
+          <line x1="4" x2="20" y1="6" y2="6" />
+          <line x1="4" x2="20" y1="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile menu -->
+  <div id="mobile-menu" class="hidden md:hidden border-t border-[var(--code-border)]">
+    <div class="px-4 py-4 space-y-3">
+      {navLinks.map((link) => (
+        <a
+          href={link.href}
+          class="block py-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+        >
+          {link.label}
+        </a>
+      ))}
+    </div>
+  </div>
+</header>
+
+<script>
+  const menuBtn = document.getElementById('mobile-menu-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+
+  menuBtn?.addEventListener('click', () => {
+    const isExpanded = menuBtn.getAttribute('aria-expanded') === 'true';
+    menuBtn.setAttribute('aria-expanded', String(!isExpanded));
+    mobileMenu?.classList.toggle('hidden');
+  });
+</script>

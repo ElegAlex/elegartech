@@ -1,0 +1,80 @@
+---
+// Giscus configuration
+// Replace these values with your own after setting up Giscus
+const giscusConfig = {
+  repo: 'username/elegartech-comments', // TODO: Replace with actual repo
+  repoId: '', // TODO: Get from giscus.app
+  category: 'Comments',
+  categoryId: '', // TODO: Get from giscus.app
+};
+---
+
+<section id="comments" class="mt-12">
+  <h2 class="text-xl font-bold mb-6">Commentaires</h2>
+
+  <div id="giscus-container">
+    {giscusConfig.repoId ? (
+      <script
+        src="https://giscus.app/client.js"
+        data-repo={giscusConfig.repo}
+        data-repo-id={giscusConfig.repoId}
+        data-category={giscusConfig.category}
+        data-category-id={giscusConfig.categoryId}
+        data-mapping="pathname"
+        data-strict="1"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="preferred_color_scheme"
+        data-lang="fr"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async
+      />
+    ) : (
+      <div class="p-6 rounded-lg bg-[var(--bg-secondary)] text-center">
+        <p class="text-[var(--text-secondary)]">
+          Les commentaires seront disponibles prochainement.
+        </p>
+        <p class="text-sm text-[var(--text-muted)] mt-2">
+          Configuration Giscus en attente.
+        </p>
+      </div>
+    )}
+  </div>
+</section>
+
+<script>
+  // Sync Giscus theme with site theme
+  function syncGiscusTheme() {
+    const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const giscusFrame = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
+
+    if (giscusFrame) {
+      giscusFrame.contentWindow?.postMessage(
+        {
+          giscus: {
+            setConfig: {
+              theme: theme === 'dark' ? 'dark' : 'light',
+            },
+          },
+        },
+        'https://giscus.app'
+      );
+    }
+  }
+
+  // Listen for theme changes
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.attributeName === 'data-theme') {
+        syncGiscusTheme();
+      }
+    });
+  });
+
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme'],
+  });
+</script>

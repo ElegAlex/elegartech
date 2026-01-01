@@ -1,0 +1,86 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@layouts/BaseLayout.astro';
+import ArticleCard from '@components/ArticleCard.astro';
+
+const CATEGORIES: Record<string, string> = {
+  'actualites': 'Actualités',
+  'ia': 'IA',
+  'open-source': 'Open Source',
+  'developpement': 'Développement',
+  'systemes': 'Systèmes',
+  'securite': 'Sécurité',
+  'analyses': 'Analyses',
+};
+
+export function getStaticPaths() {
+  const categories: Record<string, string> = {
+    'actualites': 'Actualités',
+    'ia': 'IA',
+    'open-source': 'Open Source',
+    'developpement': 'Développement',
+    'systemes': 'Systèmes',
+    'securite': 'Sécurité',
+    'analyses': 'Analyses',
+  };
+  return Object.keys(categories).map((category) => ({
+    params: { category },
+  }));
+}
+
+const { category } = Astro.params;
+const categoryLabel = CATEGORIES[category as string] || category;
+
+const allPosts = await getCollection('blog', ({ data }) => {
+  return !data.draft && data.date <= new Date();
+});
+
+const categoryPosts = allPosts
+  .filter((post) => {
+    return post.data.categories.some((cat) => {
+      const catSlug = cat
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, '-');
+      return catSlug === category;
+    });
+  })
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+
+<BaseLayout
+  title={`${categoryLabel} | ElegarTech`}
+  description={`Tous les articles de la catégorie ${categoryLabel} sur ElegarTech.`}
+>
+  <section class="py-12 px-4">
+    <div class="max-w-6xl mx-auto">
+      <header class="mb-12">
+        <a
+          href="/"
+          class="inline-flex items-center gap-1 text-sm text-[var(--text-secondary)] hover:text-[var(--accent-primary)] mb-4"
+        >
+          ← Retour à l'accueil
+        </a>
+        <h1 class="text-3xl md:text-4xl font-bold mb-2">{categoryLabel}</h1>
+        <p class="text-[var(--text-secondary)]">
+          {categoryPosts.length} article{categoryPosts.length > 1 ? 's' : ''}
+        </p>
+      </header>
+
+      {categoryPosts.length > 0 ? (
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {categoryPosts.map((post) => (
+            <ArticleCard post={post} />
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-16">
+          <p class="text-[var(--text-secondary)]">
+            Aucun article dans cette catégorie pour le moment.
+          </p>
+        </div>
+      )}
+    </div>
+  </section>
+</BaseLayout>

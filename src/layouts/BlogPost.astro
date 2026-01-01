@@ -1,0 +1,123 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { getEntry } from 'astro:content';
+import BaseLayout from './BaseLayout.astro';
+import CategoryBadge from '@components/CategoryBadge.astro';
+import TagList from '@components/TagList.astro';
+import TOC from '@components/TOC.astro';
+import Comments from '@components/Comments.astro';
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+  headings: { depth: number; slug: string; text: string }[];
+}
+
+const { post, headings } = Astro.props;
+const { title, description, date, categories, tags, author: authorRef, cover, toc, difficulty } = post.data;
+
+const author = await getEntry(authorRef);
+
+const formattedDate = new Intl.DateTimeFormat('fr-FR', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+}).format(date);
+
+const readingTime = Math.ceil(post.body.split(/\s+/).length / 200);
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  image={cover?.image.src}
+  article={true}
+  publishedTime={date}
+  author={author.data.name}
+>
+  <article class="max-w-4xl mx-auto px-4 py-12">
+    <!-- Header -->
+    <header class="mb-8">
+      <div class="flex flex-wrap items-center gap-2 mb-4">
+        {categories.map((cat) => <CategoryBadge category={cat} />)}
+        {difficulty && (
+          <span class="difficulty-badge" data-level={difficulty}>
+            {difficulty}
+          </span>
+        )}
+      </div>
+
+      <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight">
+        {title}
+      </h1>
+
+      <p class="text-lg text-[var(--text-secondary)] mb-6">
+        {description}
+      </p>
+
+      <div class="flex flex-wrap items-center gap-4 text-sm text-[var(--text-muted)]">
+        <div class="flex items-center gap-2">
+          <span class="font-medium text-[var(--text-primary)]">{author.data.name}</span>
+        </div>
+        <span>·</span>
+        <time datetime={date.toISOString()}>{formattedDate}</time>
+        <span>·</span>
+        <span>{readingTime} min de lecture</span>
+      </div>
+    </header>
+
+    <!-- Cover image -->
+    {cover && (
+      <figure class="mb-10 -mx-4 md:mx-0">
+        <img
+          src={cover.image.src}
+          alt={cover.alt}
+          class="w-full rounded-lg"
+          loading="eager"
+        />
+      </figure>
+    )}
+
+    <!-- Content with TOC -->
+    <div class="lg:grid lg:grid-cols-[1fr_220px] lg:gap-8">
+      <div class="prose prose-lg max-w-none">
+        <slot />
+      </div>
+
+      {toc && headings.length > 0 && (
+        <aside class="hidden lg:block">
+          <TOC headings={headings} />
+        </aside>
+      )}
+    </div>
+
+    <!-- Tags -->
+    <footer class="mt-12 pt-8 border-t border-[var(--code-border)]">
+      <TagList tags={tags} />
+
+      <!-- Author bio -->
+      <div class="mt-8 p-6 rounded-lg bg-[var(--bg-secondary)]">
+        <div class="flex items-start gap-4">
+          <div>
+            <p class="font-semibold text-[var(--text-primary)]">{author.data.name}</p>
+            <p class="text-sm text-[var(--text-secondary)] mt-1">{author.data.bio}</p>
+            {author.data.website && (
+              <a
+                href={author.data.website}
+                class="inline-block mt-2 text-sm text-[var(--accent-primary)] hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {author.data.website}
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <!-- Comments -->
+      <div class="mt-12">
+        <Comments />
+      </div>
+    </footer>
+  </article>
+</BaseLayout>

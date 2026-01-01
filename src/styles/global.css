@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Dark mode (default) */
+    --bg-primary: #0D1117;
+    --bg-secondary: #161B22;
+    --bg-tertiary: #21262D;
+    --text-primary: #E6EDF3;
+    --text-secondary: #8B949E;
+    --text-muted: #6E7681;
+    --accent-primary: #58A6FF;
+    --accent-success: #7EE787;
+    --accent-warning: #D29922;
+    --accent-error: #F85149;
+    --code-bg: #1C2128;
+    --code-border: #30363D;
+  }
+
+  [data-theme="light"] {
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F6F8FA;
+    --bg-tertiary: #EAEEF2;
+    --text-primary: #1F2328;
+    --text-secondary: #656D76;
+    --text-muted: #8C959F;
+    --accent-primary: #0969DA;
+    --accent-success: #1A7F37;
+    --code-bg: #F6F8FA;
+    --code-border: #D0D7DE;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: theme('fontFamily.sans');
+    font-size: clamp(1rem, 2.5vw, 1.125rem);
+    line-height: 1.6;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  /* Focus visible for accessibility */
+  :focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+  }
+
+  /* Selection styling */
+  ::selection {
+    background-color: color-mix(in srgb, var(--accent-primary) 30%, transparent);
+  }
+}
+
+@layer components {
+  /* Code blocks styling */
+  pre {
+    @apply relative rounded-lg p-4 overflow-x-auto;
+    background-color: var(--code-bg);
+    border: 1px solid var(--code-border);
+  }
+
+  pre code {
+    @apply text-sm;
+    font-family: theme('fontFamily.mono');
+    font-feature-settings: "liga" 1;
+  }
+
+  /* Inline code */
+  :not(pre) > code {
+    @apply px-1.5 py-0.5 rounded text-sm;
+    background-color: var(--code-bg);
+    border: 1px solid var(--code-border);
+    color: var(--accent-success);
+    font-family: theme('fontFamily.mono');
+  }
+
+  /* Copy button for code blocks */
+  .copy-btn {
+    @apply absolute top-2 right-2 p-2 rounded-md opacity-0 cursor-pointer;
+    background-color: var(--bg-tertiary);
+    transition: opacity 0.2s, background-color 0.2s;
+  }
+
+  .copy-btn:hover {
+    background-color: color-mix(in srgb, var(--accent-primary) 20%, transparent);
+  }
+
+  pre:hover .copy-btn {
+    @apply opacity-100;
+  }
+
+  /* Article card hover effect */
+  .article-card {
+    @apply transition-all duration-200;
+  }
+
+  .article-card:hover {
+    @apply -translate-y-1 shadow-lg;
+  }
+
+  /* Category badges */
+  .category-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    background-color: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+    color: var(--accent-primary);
+  }
+
+  /* Difficulty badges */
+  .difficulty-badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+  }
+
+  .difficulty-badge[data-level="débutant"] {
+    background-color: color-mix(in srgb, var(--accent-success) 10%, transparent);
+    color: var(--accent-success);
+  }
+
+  .difficulty-badge[data-level="intermédiaire"] {
+    background-color: color-mix(in srgb, var(--accent-warning) 10%, transparent);
+    color: var(--accent-warning);
+  }
+
+  .difficulty-badge[data-level="avancé"] {
+    background-color: color-mix(in srgb, var(--accent-error) 10%, transparent);
+    color: var(--accent-error);
+  }
+
+  /* Tag pills */
+  .tag {
+    @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs transition-colors;
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+  }
+
+  .tag:hover {
+    color: var(--accent-primary);
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    background: linear-gradient(to right, var(--accent-primary), var(--accent-success));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}

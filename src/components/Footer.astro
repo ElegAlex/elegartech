@@ -1,0 +1,90 @@
+---
+const currentYear = new Date().getFullYear();
+
+const links = {
+  navigation: [
+    { href: '/', label: 'Accueil' },
+    { href: '/categories/tutoriels', label: 'Tutoriels' },
+    { href: '/categories/actualites', label: 'Actualités' },
+  ],
+  ressources: [
+    { href: '/rss.xml', label: 'Flux RSS' },
+    { href: 'https://github.com/abrmusic', label: 'GitHub', external: true },
+    { href: 'https://alexandre-berge.fr', label: 'Portfolio', external: true },
+  ],
+};
+---
+
+<footer class="border-t border-[var(--code-border)] bg-[var(--bg-secondary)]">
+  <div class="max-w-6xl mx-auto px-4 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Brand -->
+      <div>
+        <a href="/" class="inline-flex items-center gap-2 font-bold text-lg mb-4">
+          <span class="text-[var(--accent-primary)]">&lt;</span>
+          <span>ElegarTech</span>
+          <span class="text-[var(--accent-primary)]">/&gt;</span>
+        </a>
+        <p class="text-sm text-[var(--text-secondary)] max-w-xs">
+          Blog technique francophone. Analyses et actualités pour les passionnés de tech.
+        </p>
+      </div>
+
+      <!-- Navigation -->
+      <div>
+        <h3 class="font-semibold mb-4">Navigation</h3>
+        <ul class="space-y-2">
+          {links.navigation.map((link) => (
+            <li>
+              <a
+                href={link.href}
+                class="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors"
+              >
+                {link.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <!-- Ressources -->
+      <div>
+        <h3 class="font-semibold mb-4">Ressources</h3>
+        <ul class="space-y-2">
+          {links.ressources.map((link) => (
+            <li>
+              <a
+                href={link.href}
+                class="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors inline-flex items-center gap-1"
+                target={link.external ? '_blank' : undefined}
+                rel={link.external ? 'noopener noreferrer' : undefined}
+              >
+                {link.label}
+                {link.external && (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" x2="21" y1="14" y2="3" />
+                  </svg>
+                )}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <!-- Copyright -->
+    <div class="mt-12 pt-8 border-t border-[var(--code-border)] text-center text-sm text-[var(--text-muted)]">
+      <p>&copy; {currentYear} ElegarTech. Tous droits réservés.</p>
+      <p class="mt-1">
+        Fait avec
+        <span class="text-[var(--accent-error)]">&#9829;</span>
+        et
+        <a href="https://astro.build" class="text-[var(--accent-primary)] hover:underline" target="_blank" rel="noopener noreferrer">
+          Astro
+        </a>
+      </p>
+    </div>
+  </div>
+</footer>
