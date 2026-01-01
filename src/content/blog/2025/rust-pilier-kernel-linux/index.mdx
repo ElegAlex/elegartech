@@ -1,0 +1,80 @@
+---
+title: "Rust devient officiellement un pilier du kernel Linux avec la version 6.19-rc3"
+description: "Décembre 2025 marque un tournant : Rust est déclaré langage core du kernel Linux. Premier CVE Rust, crate syn intégré, Intel LASS activé."
+date: 2025-12-30
+categories: ["Open Source", "Systèmes"]
+tags: ["rust", "linux", "kernel", "sécurité", "android"]
+author: admin
+draft: false
+featured: true
+---
+
+Le 10 décembre 2025, lors du Kernel Maintainers Summit à Tokyo, les mainteneurs Linux ont unanimement déclaré que Rust n'était plus expérimental mais un **langage core du kernel**, aux côtés de C et de l'assembleur. Cette décision marque l'aboutissement de cinq années de débats parfois houleux sur l'intégration d'un second langage de haut niveau dans le cœur du système d'exploitation le plus déployé au monde. Le kernel 6.19-rc3, publié le 29 décembre 2025, illustre cette nouvelle ère avec l'inclusion du crate **syn** et le premier **CVE affectant du code Rust** (CVE-2025-68260).
+
+## L'annonce officielle met fin à cinq ans d'expérimentation
+
+Miguel Ojeda, leader du projet Rust for Linux, a formalisé cette décision le 12 décembre 2025 : _"L'expérience est terminée, Rust est là pour rester. J'espère que cela signale aux entreprises l'engagement du kernel à investir davantage."_ Jonathan Corbet de LWN.net a résumé le consensus : _"Rust dans le kernel n'est plus expérimental — c'est maintenant une partie core et définitive."_ Steven Rosted a confirmé qu'il y avait eu **"zero pushback"** parmi les mainteneurs assemblés.
+
+Cette officialisation ne signifie pas que tout fonctionne parfaitement. Ojeda a précisé que de nombreuses configurations, architectures et toolchains nécessitent encore du travail. Cependant, des **millions d'appareils Android 16** fonctionnent déjà avec le kernel 6.12 incluant le module **ashmem** écrit en Rust, prouvant la viabilité en production.
+
+## Le crate syn ouvre la voie aux macros procédurales
+
+Linux 6.19 intègre le crate **syn**, une bibliothèque de parsing qui convertit les flux de tokens Rust en arbres syntaxiques. Cette inclusion permet l'utilisation de **macros procédurales** dans le code kernel, un mécanisme puissant pour la génération de code à la compilation.
+
+La signification technique est majeure : syn, accompagné de **quote** et **proc-macro2** (également vendorisés dans les sources kernel), permet de créer des abstractions sûres sans overhead runtime. Les macros dérivées peuvent générer automatiquement du code boilerplate pour les structures de données kernel, réduisant les erreurs manuelles. Certains développeurs comme Kent Overstreet ont exprimé des réserves, qualifiant cette dépendance de _"really gross"_ en raison de la complexité qu'elle introduit, mais le consensus technique a prévalu.
+
+## Premier CVE Rust révèle les limites du code unsafe
+
+Le 16 décembre 2025, Greg Kroah-Hartman a annoncé **CVE-2025-68260**, le premier CVE affectant du code Rust dans le kernel Linux. Cette vulnérabilité touche le driver **Android Binder** réécrit en Rust.
+
+La faille est une **race condition** dans un bloc `unsafe`, causant une corruption des pointeurs prev/next d'une liste chaînée intrusive. L'impact se limite à un crash système (denial of service) — pas d'exécution de code à distance ni d'escalade de privilèges. Seuls les systèmes avec `CONFIG_ANDROID_BINDER_IPC_RUST` activé sont affectés. Le même jour, **159 CVEs** ont été attribués à du code C, mettant ce premier CVE Rust en perspective. Kroah-Hartman a souligné : _"Rust n'est pas une solution miracle, mais ça aide énormément."_
+
+## Intel LASS renforce la séparation user/kernel contre Spectre
+
+Linux 6.19 intègre **Intel LASS (Linear Address-Space Separation)**, une fonctionnalité de sécurité matérielle après trois ans de développement (janvier 2023 à décembre 2025). LASS partitionne l'espace d'adressage virtuel 64-bit entre user space (moitié inférieure) et kernel space (moitié supérieure).
+
+Cette séparation atténue une classe d'**attaques side-channel spéculatives** comme Spectre LAM. Les protections s'appliquent avant les page-walks, empêchant un attaquant de dériver des informations de timing depuis les TLBs, caches ou page walkers. LASS est **activé par défaut** sur les CPUs supportés, notamment les **Intel Sierra Forest** et la gamme **Xeon 6**. Un nouveau flag `lass` apparaît dans `/proc/cpuinfo` pour indiquer le support.
+
+## Linus Torvalds critique les commits "garbage" sans lien avec Rust
+
+Les critiques récentes de Torvalds sur les commits "garbage" ne concernent **pas Rust directement**. En décembre 2025, il s'est emporté contre les tags `Link:` inutiles dans les commits Git : _"Arrêtez ces conneries. 99% des liens que je vois pointent vers des ordures inutiles et ne font que me faire perdre du temps."_
+
+En août 2025, il avait rejeté des patches RISC-V tardifs et mal formatés : _"C'est des ordures arrivées trop tard... Vous réessayerez en 6.18. TÔT dans la merge window. Et sans les ordures."_ Sur Rust spécifiquement, Torvalds reste favorable bien que parfois impatient. À l'Open Source Summit 2024, il notait : _"Je m'attendais à des mises à jour plus rapides, mais les développeurs kernel historiques sont habitués au C et pas exactement enthousiastes à apprendre un nouveau langage."_
+
+## De 2022 à 2025, une progression constante malgré les controverses
+
+L'intégration de Rust suit une trajectoire claire depuis kernel 6.1 :
+
+| Date | Milestone |
+|---|---|
+| **Décembre 2022** | Linux 6.1 — premier kernel avec support Rust (~12,500 lignes) |
+| **Mars 2024** | Linux 6.8 — premiers drivers Rust (PHY réseau, QR codes panic) |
+| **Linux 6.15** | Nova (driver GPU NVIDIA) — composant core initial mergé |
+| **Septembre 2024** | Wedson Almeida Filho (Microsoft) démissionne, citant "nonsense non-technique" |
+| **Février 2025** | Controverse DMA avec Christoph Hellwig ; Hector Martin (Asahi Linux) quitte |
+| **Linux 6.18** | Driver Android Binder réécrit en Rust mergé |
+| **Décembre 2025** | Rust déclaré officiellement core ; premier CVE Rust |
+
+En avril 2025, le kernel contenait environ **34 millions de lignes C** contre **25,000 lignes Rust** — un ratio minuscule mais croissant rapidement.
+
+## Impact majeur pour les développeurs de drivers
+
+Pour les développeurs, l'officialisation change la donne. Dave Airlie, mainteneur DRM, a annoncé que le sous-système graphique sera probablement **obligatoire en Rust pour les nouveaux drivers d'ici ~2026**, interdisant le C. Les drivers existants restent en C, mais tout nouveau code devra utiliser Rust.
+
+Les mainteneurs C ne sont **pas obligés d'apprendre Rust** ni de maintenir du code Rust. Cependant, comme Torvalds l'a clarifié à Christoph Hellwig : _"Si vous sentez que vous contrôlez qui peut utiliser votre code, VOUS AVEZ TORT... Ignorer le côté Rust signifie automatiquement que vous n'avez aucun mot à dire sur le côté Rust."_ Cette position claire établit que le code Rust peut utiliser les APIs C sans l'approbation explicite des mainteneurs de ces APIs.
+
+## Les géants tech investissent massivement dans Rust for Linux
+
+**Google** finance directement Miguel Ojeda depuis 2019 et pousse Rust dans Android, avec des résultats mesurables : réduction de **1000x** de la densité de vulnérabilités mémoire dans le code Rust vs C/C++, et chute des vulnérabilités mémoire sous **20% du total** pour la première fois. **Microsoft** contribue activement via ses ingénieurs et adopte Rust dans le kernel Windows. **Red Hat** développe le driver GPU **Nova** pour NVIDIA en Rust. **Meta** et **Amazon** sont membres platinum de la Rust Foundation, AWS utilisant Rust pour Firecracker, Bottlerocket et le système Nitro.
+
+## L'avenir verra une coexistence C/Rust durable
+
+Rust ne remplacera pas C — les **34 millions de lignes existantes** ne seront pas réécrites. La stratégie est une architecture hybride où Rust cible les **nouveaux drivers, sous-systèmes et bibliothèques helper**. Les abstractions Rust encapsulent les interactions unsafe avec le C dans des APIs sûres.
+
+Les prochaines étapes incluent le support GCC pour Rust (**gccrs**) prévu fonctionnel pour le kernel en 2026, et une politique de version minimale Rust alignée sur **Debian Stable**. Linux 6.19 ajoute déjà les bindings I2C permettant d'écrire des drivers I2C en Rust, et le support des paramètres de modules Rust.
+
+## Conclusion : un tournant irréversible
+
+L'officialisation de Rust marque un changement fondamental dans l'évolution de Linux. Après des controverses significatives — démissions de mainteneurs clés, accusations de "cancer" par Hellwig, départ d'Hector Martin — le consensus technique a prévalu. Le premier CVE Rust démontre que le langage n'est pas une panacée, mais concentre les bugs potentiels dans des blocs `unsafe` plus facilement auditables.
+
+Avec des millions d'appareils en production, des drivers GPU critiques en développement (Nova pour NVIDIA, drivers Apple AGX), et le soutien des géants tech, Rust est désormais irréversiblement ancré dans l'écosystème Linux. Pour les développeurs kernel, la maîtrise de Rust devient un atout de carrière incontournable, bien que C reste fondamental pour comprendre l'existant. L'objectif n'a jamais été de remplacer C, mais d'offrir une voie plus sûre pour le nouveau code — et cette voie est maintenant officiellement ouverte.
