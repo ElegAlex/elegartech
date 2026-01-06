@@ -1,0 +1,110 @@
+---
+title: "Shadow-utils 4.19.0 enterre l'expiration périodique des mots de passe"
+description: "Shadow-utils 4.19.0 déprécie la rotation des mots de passe, aligné sur le NIST SP 800-63B-4. Fin d'une pratique contre-productive vieille de 40 ans."
+date: 2026-01-06
+categories: ["Sécurité", "Systèmes"]
+tags: ["shadow-utils", "NIST", "mots de passe", "Linux", "authentification"]
+author: admin
+draft: false
+featured: false
+---
+
+**Le projet Shadow-utils vient de franchir un cap historique** : avec la version 4.19.0 publiée le 30 décembre 2025, les outils d'expiration périodique des mots de passe sont officiellement dépréciés. Cette décision, alignée sur les recommandations du NIST SP 800-63B-4, consacre la fin d'une pratique vieille de quarante ans que la recherche scientifique a définitivement disqualifiée. Pour les administrateurs système Linux, c'est la fin d'une époque : les commandes `chage`, `passwd` et leurs options de rotation temporelle rejoignent le cimetière des fausses bonnes idées sécuritaires.
+
+La portée de cette décision est considérable. Shadow-utils constitue l'infrastructure fondamentale d'authentification de virtuellement toutes les distributions Linux — Debian, Ubuntu, Fedora, RHEL, Arch, SUSE. Les fichiers `/etc/passwd`, `/etc/shadow` et `/etc/group` sont tous gérés par ce paquet critique. Cette dépréciation envoie donc un signal clair à l'ensemble de l'écosystème : **la rotation périodique des mots de passe est désormais contre-productive**.
+
+---
+
+## Ce que Shadow-utils 4.19.0 change concrètement
+
+La version 4.19.0, baptisée « Herve » et publiée par Serge Hallyn, introduit une dépréciation systématique des fonctionnalités liées à l'expiration temporelle des mots de passe. Le programme **expiry(1)** est entièrement déprécié. Pour **chage(1)**, les options `-I/--inactive`, `-m/--mindays`, `-M/--maxdays` et `-W/--warndays` sont condamnées. Le programme **passwd(1)** voit ses options `-k/--keep-tokens`, `-n/--mindays`, `-x/--maxdays`, `-i/--inactive` et `-w/--warndays` suivre le même chemin. Les commandes **useradd(8)** et **usermod(8)** perdent leur option `-f/--inactive`.
+
+Les fichiers de configuration sont également impactés. Dans `login.defs(5)`, les paramètres `PASS_MIN_DAYS`, `PASS_MAX_DAYS` et `PASS_WARN_AGE` sont dépréciés. Le fichier `/etc/default/useradd` voit sa variable `INACTIVE` subir le même sort. Quant au fichier `shadow(5)` lui-même, les champs `sp_min`, `sp_max`, `sp_warn` et `sp_inact` sont dépréciés, et `sp_lstchg` sera restreint aux seules valeurs 0 et vide.
+
+Les notes de version citent explicitement deux justifications. La première est scientifique : « _Scientific research shows that periodic password expiration leads to predictable password patterns, and that even in a theoretical scenario where that wouldn't happen the gains in security are mathematically negligible_ ». La seconde est normative : « _Modern security standards, such as NIST SP 800-63B-4 in the USA, prohibit periodic password expiration_ ».
+
+---
+
+## NIST SP 800-63B-4 passe du conseil à l'interdiction
+
+La publication finale du NIST SP 800-63B-4 le 26 août 2025 marque un durcissement majeur des recommandations fédérales américaines. Là où la version précédente (SP 800-63B-3 de juin 2017) utilisait « SHOULD NOT » — une recommandation —, la nouvelle version emploie désormais « **SHALL NOT** » — une obligation : « _Verifiers and CSPs SHALL NOT require subscribers to change passwords periodically. However, verifiers SHALL force a change if there is evidence that the authenticator has been compromised_ ».
+
+Ce passage du conditionnel à l'impératif transforme fondamentalement la nature de la recommandation. Pour les organisations soumises aux standards fédéraux américains, imposer une rotation périodique des mots de passe devient désormais une **non-conformité**. Le NIST justifie cette position dans sa FAQ officielle : « _Users tend to choose weaker memorized secrets when they know that they will have to change them in the near future. When those changes do occur, they often select a secret that is similar to their old memorized secret by applying a set of common transformations such as increasing a number in the password_ ».
+
+Le document apporte d'autres changements significatifs : la longueur minimale passe à **15 caractères** pour les mots de passe utilisés seuls (contre 8 auparavant), les règles de composition (majuscules, chiffres, caractères spéciaux) sont interdites (« SHALL NOT impose »), et la vérification contre des listes de mots de passe compromis devient obligatoire.
+
+---
+
+## Quarante ans de recherche scientifique condamnent la rotation
+
+La dépréciation de Shadow-utils s'appuie sur un corpus de recherche académique accumulé depuis les années 2000. L'étude fondatrice reste celle de **Yinqian Zhang, Fabian Monrose et Michael K. Reiter** de l'Université de Caroline du Nord à Chapel Hill, présentée à la conférence ACM CCS en 2010. Les chercheurs ont analysé **10 374 comptes défunts** totalisant **51 141 hachages de mots de passe** — soit 4 à 15 mots de passe par compte, changés tous les trois mois entre 2004 et 2009.
+
+Les résultats sont accablants : **41%** des comptes étaient crackables en moins de trois secondes à partir du mot de passe précédent dans une attaque hors ligne. Plus préoccupant encore, **17%** des comptes étaient compromissibles en moins de cinq tentatives dans une attaque en ligne — c'est-à-dire sans même avoir accès aux hachages. Pour les utilisateurs ayant déjà utilisé des transformations prévisibles, le taux de succès atteignait **63%**.
+
+Les chercheurs ont identifié des patterns de transformation systématiques : changements de capitalisation (« 17candy# » → « 17candY# »), incrémentation de chiffres (« stinson1! » → « stinson2! »), duplication de caractères (« dance#7 » → « dance#77 »), substitution leet (« raven#1 » → « r@ven#1 »). La transformation la plus courante — remplacer « 1 » par « 2 » — réussissait dans **1,26%** des cas, un chiffre énorme rapporté au nombre de comptes ciblables.
+
+**Cormac Herley** de Microsoft Research a apporté une perspective économique dévastatrice dans son article « _So Long, And No Thanks for the Externalities_ » (2009). Avec **180 millions d'adultes en ligne** aux États-Unis, une heure de temps utilisateur représente **2,6 milliards de dollars**. Une minute par jour par utilisateur équivaut à **15,9 milliards de dollars annuels** en productivité perdue. Herley démontre que respecter les conseils contre la réutilisation des mots de passe coûte aux utilisateurs **3,9 fois plus d'effort** sans bénéfice quantifiable.
+
+L'étude de l'Université Carleton citée dans les notes de Shadow-utils (« _Quantifying the Security Advantage of Password Expiration Policies_ ») démontre mathématiquement que les changements fréquents ne gênent les attaquants que **marginalement**, certainement pas assez pour compenser les inconvénients utilisateurs.
+
+---
+
+## L'origine oubliée d'une pratique devenue dogme
+
+Comment une pratique si contre-productive a-t-elle pu s'imposer universellement ? La rotation à 90 jours trouve son origine dans les **calculs de sécurité informatique des années 1980**. À cette époque, on estimait qu'un ordinateur moyen mettrait environ 90 jours pour craquer un hachage de mot de passe par force brute. La logique paraissait imparable : si un attaquant volait les hachages de `/etc/passwd` (avant l'invention des shadow passwords), il fallait changer le mot de passe avant qu'il ne soit cracké.
+
+Le **Trusted Computer System Evaluation Criteria (TCSEC)**, communément appelé « Orange Book », publié en août 1983 par le National Computer Security Center (une branche de la NSA), a codifié ces pratiques. Le « Green Book » associé traitait spécifiquement des mots de passe. Ces documents ont été officiellement remplacés par les Common Criteria en 1999, puis annulés par directive du DoD le 24 octobre 2002 — mais leurs recommandations avaient déjà pénétré le folklore sécuritaire.
+
+Le moment pivot fut la publication du **NIST Special Publication 800-63, Appendix A** en 2003, rédigé par **Bill Burr**, alors manager au NIST. Ce document recommandait des mots de passe avec caractères spéciaux, majuscules, chiffres, et un changement tous les 90 jours. Il était largement basé sur un livre blanc des années 1980, faute de données empiriques. En août 2017, Burr déclarait au Wall Street Journal : « _Much of what I did I now regret_ ».
+
+Le modèle de menace original est devenu totalement obsolète. Les mots de passe qui prenaient 90 jours à craquer il y a 20 ans se brisent aujourd'hui en **secondes** grâce au cloud computing. Plus fondamentalement, les attaques modernes n'attendent pas de craquer les hachages : phishing, credential stuffing, keyloggers, ingénierie sociale — les identifiants compromis sont exploités **dans les heures** suivant leur vol, pas après 90 jours.
+
+---
+
+## Un consensus international des agences de cybersécurité
+
+La position du NIST n'est pas isolée. L'**ANSSI** française, dans ses « Recommandations relatives à l'authentification multifacteur et aux mots de passe » (v2.0, octobre 2021), recommande de « **ne pas imposer par défaut de délai d'expiration sur les mots de passe des comptes non sensibles** » (recommandation R24). Pour les comptes administrateurs, l'ANSSI suggère une durée de **1 à 3 ans**, loin des 90 jours traditionnels. L'agence reconnaît explicitement que « les stratégies mises en place par les utilisateurs pour s'adapter aux contraintes des politiques d'expiration de mots de passe sont prévisibles et font baisser le niveau de sécurité effectif ».
+
+Le **NCSC britannique** va plus loin en conseillant explicitement **contre** l'expiration régulière : « _We actually advise against this_ ». Le programme Cyber Essentials, obligatoire pour les contrats gouvernementaux britanniques, déconseille formellement la rotation périodique. Le NCSC note que les mots de passe volés sont « généralement exploités immédiatement », rendant la rotation inefficace.
+
+La **CISA américaine** s'aligne sur le NIST en recommandant des changements « event-based » — déclenchés par des incidents de sécurité, non par le calendrier. Le **BSI allemand** a retiré l'expiration obligatoire de ses recommandations en 2020 : les systèmes « ne devraient demander un changement de mot de passe qu'avec une raison valide ».
+
+Toutes ces agences convergent vers les mêmes alternatives : authentification multifacteur (avec préférence pour FIDO2/passkeys résistants au phishing), surveillance continue contre les bases de données compromises, gestionnaires de mots de passe, et longueur plutôt que complexité.
+
+---
+
+## Le casse-tête de la conformité réglementaire
+
+Un obstacle majeur subsiste : **PCI-DSS v4.0**, entré pleinement en vigueur le 31 mars 2025, maintient l'exigence de rotation à 90 jours dans son Requirement 8.3.9 — mais uniquement si l'authentification mono-facteur est utilisée. Les organisations implémentant l'authentification multifacteur ou l'analyse comportementale dynamique peuvent échapper à cette exigence.
+
+La FAQ 1467 du PCI-SSC (août 2019) offre une porte de sortie : les organisations suivant les recommandations NIST peuvent s'y conformer moyennant un « compensating control worksheet » documentant leur approche alternative. Cette solution crée néanmoins une charge administrative supplémentaire.
+
+**ISO 27001:2022** adopte une approche flexible basée sur les risques, sans durée d'expiration spécifique imposée. Les organisations définissent et justifient leurs propres politiques. Les contrôles A.9.2.1 et A.9.4.3 concernent la gestion des identités et des mots de passe sans prescrire de rotation temporelle.
+
+**SOC 2**, basé sur les Trust Services Criteria de l'AICPA, ne prescrit pas de paramètres spécifiques mais évalue l'efficacité des contrôles. Les auditeurs acceptent de plus en plus les approches alignées sur le NIST — changement annuel ou uniquement sur compromission.
+
+---
+
+## La communauté salue la fin d'un « théâtre sécuritaire »
+
+Sur LWN.net, l'article annonçant Shadow-utils 4.19.0 a suscité un accueil unanimement positif. Un commentateur, Wol (subscriber #4433), résume le sentiment général : « _I'm glad to see they're deprecating password expiration. I've always hated that and thought it was nothing more than security theatre_ ». Il raconte avoir implémenté l'expiration à 3 semaines sur des réseaux 10-base-2 et 286, avant de passer à 6 semaines — et la difficulté de convaincre le management d'abandonner cette pratique une fois les données prouvant son inefficacité disponibles.
+
+Un autre contributeur, farnz, explique l'origine historique de la pratique : si l'on estimait qu'il faudrait 90 jours pour craquer un hachage volé, alors la rotation tous les 90 jours semblait logique. « C'était logique à l'époque de `/etc/passwd` avant les shadow passwords », note-t-il, avant d'ajouter : « _Better to force people to use long randomly-generated passwords stored in a password-keeper and a good form of 2FA like TOTP or a Yubikey_ ».
+
+Le mainteneur hailfinger invite les organisations ayant réussi à convaincre leur hiérarchie d'abandonner la rotation à témoigner sur le GitHub du projet : « _We're very interested in that_ ». Il souligne que les trois éléments — étude scientifique, interdiction NIST, dépréciation officielle par Shadow-utils — constituent désormais un argumentaire solide pour faire évoluer les politiques d'entreprise.
+
+---
+
+## Vers une nouvelle doctrine sécuritaire
+
+La dépréciation par Shadow-utils marque l'aboutissement d'un changement de paradigme amorcé il y a près d'une décennie. Les recommandations se cristallisent autour de principes clairs : **longueur plutôt que complexité** (15+ caractères), **changement uniquement sur compromission**, **vérification contre les bases de données de fuites**, et surtout **authentification multifacteur** comme couche de protection primaire.
+
+Les passkeys et l'authentification FIDO2 représentent l'horizon vers lequel convergent toutes les agences. La CISA qualifie l'« MFA résistant au phishing » de « gold standard ». Microsoft rapporte un taux de succès d'enregistrement des passkeys de **99%** et une connexion **14 fois plus rapide** qu'avec mot de passe + MFA. L'ère du mot de passe à rotation trimestrielle touche à sa fin.
+
+Pour les organisations, la transition reste un défi. Les systèmes legacy, les politiques internes fossilisées, les exigences de conformité contradictoires créent une inertie considérable. Mais avec Shadow-utils rejoignant le NIST, l'ANSSI, le NCSC, la CISA et le BSI, les arguments pour maintenir la rotation périodique s'amenuisent. Le « théâtre sécuritaire » des 40 dernières années cède enfin la place à une approche fondée sur les preuves.
+
+---
+
+## Conclusion
+
+La dépréciation de l'expiration périodique dans Shadow-utils 4.19.0 n'est pas un simple changement technique — c'est la reconnaissance officielle par l'infrastructure fondamentale de Linux que quatre décennies de « bonnes pratiques » étaient en réalité contre-productives. L'étude de l'UNC Chapel Hill démontrant que **41% des mots de passe** sont crackables en secondes à partir du précédent, combinée au passage du NIST de « SHOULD NOT » à « SHALL NOT », crée un point de bascule pour l'industrie. Les organisations qui persistent à imposer des rotations trimestrielles devront désormais justifier pourquoi elles ignorent le consensus scientifique et réglementaire — une position de plus en plus difficile à défendre.
