@@ -1,0 +1,147 @@
+---
+title: "Ghostty et la rébellion tranquille de Mitchell Hashimoto contre GitHub"
+description: "Le créateur de Terraform interdit les issues sur Ghostty, révélant la crise du burnout des mainteneurs open source et questionnant la gouvernance."
+date: 2026-01-09
+categories: ["Open Source", "Analyses"]
+tags: ["ghostty", "open-source", "burnout", "gouvernance", "hashicorp"]
+author: admin
+draft: false
+featured: false
+---
+
+**Le créateur de Terraform a interdit la création d'issues sur son nouveau terminal open source, déclenchant un débat de fond sur la gouvernance des projets communautaires.** Cette décision, apparemment anodine, révèle une crise systémique : 60% des mainteneurs open source ont quitté ou envisagé de quitter leur rôle par épuisement. Mitchell Hashimoto, figure emblématique de l'écosystème DevOps, propose une solution radicale qui divise la communauté. Le 27 décembre 2024, au lendemain du lancement public de Ghostty 1.0, il a documenté sa politique dans l'issue #3558 : les utilisateurs doivent désormais passer par les Discussions GitHub avant qu'un mainteneur ne convertisse éventuellement leur signalement en issue. Cette approche, inspirée de son expérience avec Vagrant et les outils HashiCorp, questionne les fondements mêmes de la contribution open source.
+
+## Un terminal né de la frustration d'un vétéran
+
+Ghostty n'est pas un projet open source ordinaire. C'est l'expression technique d'un ingénieur qui a façonné l'infrastructure moderne du cloud et qui, libéré des contraintes corporatives, a décidé de construire l'outil parfait pour son propre usage.
+
+Mitchell Hashimoto a cofondé HashiCorp en 2012 avec Armon Dadgar, après avoir créé Vagrant pendant ses études à l'Université de Washington. L'entreprise a engendré des outils devenus standards industriels : **Terraform** (infrastructure as code), **Vault** (gestion des secrets), **Consul** (service mesh), et **Nomad** (orchestration). Ses logiciels sont téléchargés plus de **100 millions de fois par an** et utilisés par 100 des 500 plus grandes entreprises mondiales. En février 2025, IBM a acquis HashiCorp pour **6,4 milliards de dollars**.
+
+Hashimoto a quitté l'entreprise en décembre 2023, après la naissance de son premier enfant, souhaitant revenir à ce qu'il aime : écrire du code. Il avait déjà commencé Ghostty en 2021 comme projet d'apprentissage personnel, explorant le langage Zig et la programmation GPU.
+
+Le terminal se distingue par une philosophie inhabituelle : offrir **vitesse, fonctionnalités et interface native** simultanément, là où ses concurrents forcent généralement un compromis. Alacritty privilégie la performance brute mais manque de fonctionnalités intégrées. Kitty offre la richesse fonctionnelle mais avec une interface non-native. iTerm2 propose l'intégration macOS mais avec des performances variables.
+
+Ghostty est construit sur une architecture innovante. Son cœur, **libghostty**, est une bibliothèque écrite en Zig (80% du code) avec une interface C-ABI permettant l'intégration dans d'autres applications. L'interface utilise SwiftUI et Metal sur macOS, GTK4 et OpenGL sur Linux. Cette conception lui permet d'être le seul terminal, avec iTerm2, à utiliser le renderer Metal d'Apple, tout en maintenant les ligatures typographiques accélérées par GPU — une combinaison qu'aucun concurrent n'offre.
+
+Le projet a connu une croissance remarquable. Après deux ans de beta privée avec environ **5 000 testeurs** et une communauté Discord de 28 000 membres, la version 1.0 a été publiée le 26 décembre 2024. En janvier 2026, Ghostty compte plus de **38 200 étoiles GitHub**, 422 contributeurs, et près de 13 000 commits. Le projet est passé sous structure non-profit via le parrainage fiscal de Hack Club fin 2025.
+
+## La politique qui a enflammé Hacker News
+
+Le 27 décembre 2024, un jour après le lancement public, Hashimoto a créé l'issue #3558 intitulée « Why users cannot create Issues directly ». Son contenu est devenu le catalyseur d'un débat intense sur la gouvernance open source.
+
+La restriction est simple dans son mécanisme : les utilisateurs ne peuvent pas créer d'issues directement sur le dépôt Ghostty. Ils doivent d'abord ouvrir une Discussion GitHub. Seul un mainteneur peut ensuite convertir cette discussion en issue si elle identifie un problème actionnable et confirmé.
+
+Hashimoto justifie cette approche avec une statistique frappante tirée de son expérience :
+
+> « Cette approche est basée sur des années d'expérience dans la maintenance de projets open source et sur l'observation que **80-90% de ce que les utilisateurs pensent être des bugs sont en réalité des malentendus, des problèmes environnementaux, ou des erreurs de configuration de leur part**. Pour ce qui reste, la majorité sont souvent des demandes de fonctionnalités (fonctionnalités non implémentées) et non des bugs (fonctionnalités dysfonctionnelles). Parmi les demandes de fonctionnalités, presque toutes sont sous-spécifiées et nécessitent plus de guidance d'un mainteneur pour être travaillées. »
+
+L'objectif déclaré est l'efficacité : « Ce pattern facilite la tâche des mainteneurs ou contributeurs pour trouver des issues sur lesquelles travailler puisque _chaque issue_ est prête à être travaillée. »
+
+Dans le fichier CONTRIBUTING.md de Ghostty, Hashimoto contextualise sa démarche avec une candeur inhabituelle :
+
+> « Je m'excuse pour ce mur de texte. Je n'essaie pas d'être difficile et j'apprécie vraiment vos contributions. Ghostty est un projet personnel que je maintiens sur mon temps libre. Si vous attendez de moi que je dédie mon temps personnel à corriger des bugs, maintenir des fonctionnalités et réviser du code, je vous demande gentiment de passer quelques minutes à lire ce document. »
+
+Cette politique s'inscrit dans une approche plus large de modération stricte. Dans sa réflexion post-lancement, Hashimoto a admis : « Les mods et moi avons manié le marteau du ban libéralement. Je suis sûr que nous avons exclu des gens bien. Mais étant donné la taille du Discord, nous avions très peu de patience pour les gens qui se comportaient mal. »
+
+## Le verdict de la communauté technique
+
+La discussion Hacker News sur l'issue #3558 a accumulé environ **712 points et 264 commentaires**, reflétant l'intensité du débat. Le sentiment général s'est révélé étonnamment nuancé, avec une légère majorité comprenant la démarche de Hashimoto.
+
+Les partisans de la restriction avancent plusieurs arguments. L'utilisateur « nine_k » résume la logique : « Le point est l'opposé, si je comprends bien. Toute plainte d'utilisateur commence comme une discussion. Si un rapport de bug actionnable en résulte, il va dans le tracker... Les discussions sont mieux adaptées pour, eh bien, les discussions. »
+
+Un autre commentateur souligne la dimension psychologique : le compteur d'issues ouvertes, affiché prominemment sur GitHub, crée une pression constante sur les mainteneurs. Les discussions n'ont pas cet effet anxiogène. L'utilisateur « keyle » propose un calcul pragmatique : « Si vous passez plus de temps à fermer des issues qu'à les créer manuellement depuis les discussions, le calcul est favorable. »
+
+Les critiques pointent cependant des failles dans le raisonnement. L'objection la plus fréquente concerne la redondance avec les fonctionnalités existantes de GitHub. « Comment ceci n'est-il pas trivialement résolu via un tag 'ready-to-be-worked-on' ? » demande l'utilisateur « eviks ». « Si les discussions avaient une UI plus moderne avec des threads ou quelque chose, la différence serait peut-être réelle. Mais autant que je sache, c'est le même ensemble de fonctionnalités, donc c'est effectivement équivalent à un tag » ajoute « oofbey ».
+
+D'autres évoquent les fonctionnalités récentes de GitHub comme les types d'issues ou les Projects, conçus précisément pour ce type de workflow. L'utilisateur « paxys » observe : « Donc ils utilisent les Issues comme un tableau de projet pour suivre et gérer les éléments de travail en cours, mais Projects est construit exactement pour ça. »
+
+Une critique plus substantielle concerne l'efficacité réelle du système. « Maxious » note que des investigations sur des fuites mémoire sont « dispersées entre les discussions, X/Twitter et Discord » sans avoir « gradué vers le statut d'issue ». « quantummagic » témoigne : « J'ai dû abandonner Ghostty à cause de son problème de fuite mémoire » — suggérant que des problèmes réels peuvent se perdre dans les limbes des discussions.
+
+Un contre-exemple percutant vient de « sammy2255 » : « Curl (sans doute l'un des logiciels open source les plus utilisés au monde) a actuellement 5 issues ouvertes » — démontrant que des projets massifs peuvent gérer leur tracker sans restrictions draconiennes.
+
+## L'épidémie silencieuse du burnout des mainteneurs
+
+La controverse Ghostty s'inscrit dans un contexte plus large : une crise systémique de la maintenance open source que les statistiques récentes documentent avec précision.
+
+Le rapport Tidelift 2024, basé sur une enquête auprès de plus de 400 mainteneurs, révèle des chiffres alarmants. **60% des mainteneurs se décrivent comme des hobbyistes non rémunérés**, un chiffre inchangé depuis 2023 malgré la prise de conscience croissante du problème. Plus troublant encore : **60% ont quitté ou envisagé de quitter** leur rôle de mainteneur.
+
+Les raisons invoquées dessinent le portrait d'une activité devenue insoutenable :
+
+- Exigences de la vie personnelle concurrentes (54%)
+- Perte d'intérêt (51%)
+- Burnout (44%)
+- Rémunération insuffisante (38%)
+
+Près de la moitié des mainteneurs (**48%**) se sentent sous-appréciés ou considèrent leur travail comme ingrat. **43%** déclarent que la maintenance ajoute du stress à leur vie personnelle. Seulement **3%** reçoivent un revenu des fondations open source.
+
+Une étude financée par Sentry et l'Open Source Pledge, menée par Miranda Heath, identifie six facteurs interconnectés du burnout. La difficulté à être rémunéré force un « double shift » — travail salarié le jour, maintenance la nuit. La charge écrasante submerge les mainteneurs solo sous les demandes et notifications. La maintenance semble peu gratifiante comparée à la création. Le comportement toxique de certains utilisateurs — exigeants, ayant droit, hostiles — épuise émotionnellement. L'isolement prive les mainteneurs du soutien de collègues. La peur de perdre le contrôle freine l'acceptation de financements.
+
+Un témoignage anonyme de l'étude illustre cette réalité : « Je faisais des nuits et des weekends, ça détruisait ma santé et j'étais juste dévasté, donc après un moment, assez de relances sur les issues du genre 'c'est maintenu ?', 'vous allez corriger mon problème ?', j'ai dû dire que je devais abandonner. »
+
+Les conséquences dépassent le bien-être individuel. L'affaire **xz Utils** de 2024 a démontré comment un attaquant peut exploiter un mainteneur épuisé, gagnant sa confiance sur plusieurs années pour insérer une backdoor. Suite à cet incident, **66% des mainteneurs** se déclarent moins confiants envers les pull requests de non-mainteneurs. En novembre 2025, Kubernetes a retiré l'un de ses composants les plus populaires, **Ingress NGINX**, non par obsolescence technique mais parce que les mainteneurs ne pouvaient plus soutenir le travail en dehors des heures de bureau.
+
+## Les modèles de gouvernance à l'épreuve de la croissance
+
+La restriction de Ghostty pose une question fondamentale : comment les projets open source doivent-ils se gouverner à mesure qu'ils grandissent ? L'histoire récente offre plusieurs modèles, chacun avec ses succès et ses échecs.
+
+Le modèle **BDFL** (Benevolent Dictator for Life) reste le plus simple conceptuellement. Une personne, généralement le fondateur, détient l'autorité finale sur toutes les décisions majeures. Linus Torvalds conserve ce rôle pour le noyau Linux, même si la plupart des décisions sont déléguées aux mainteneurs de sous-systèmes. Guido van Rossum l'a exercé pour Python jusqu'en 2018, quand la controverse autour de PEP 572 l'a poussé à démissionner.
+
+Ce modèle permet une prise de décision rapide et une vision cohérente, mais ses limitations émergent avec l'échelle. Le fondateur devient un goulot d'étranglement. Un risque de « système de castes » apparaît où les non-fondateurs se sentent incapables d'influencer la direction du projet.
+
+Le modèle par **comités** représente une évolution fréquente. Node.js illustre cette transition. Sous la tutelle de Joyent, le projet suivait un modèle BDFL. En janvier 2015, frustrée par le rythme lent et le manque d'autonomie, la communauté a forké le projet pour créer io.js, adoptant un « modèle open-open source » où tout contributeur qui mergait un changement recevait l'accès commit. La fusion en octobre 2015 a donné naissance à Node.js v4.0.0, gouverné par un modèle de recherche de consensus avec un Technical Steering Committee et des groupes de travail spécialisés.
+
+Rust a développé un système de **RFC** (Request for Comments) où les changements substantiels nécessitent une proposition formelle soumise à délibération communautaire. Plusieurs équipes spécialisées — Core, Lang, Compiler, Dev Tools — gèrent différents aspects. Mais ce modèle n'est pas immunisé contre les crises. En novembre 2021, **l'équipe entière de modération de Rust a démissionné** publiquement, accusant la Core Team de se placer « hors de toute responsabilité envers quiconque ».
+
+Les **fondations** offrent une troisième voie. L'Apache Software Foundation, organisation non-profit 501(c)(3), applique une gouvernance méritocratique appelée « The Apache Way ». Les nouveaux projets entrent comme « podlings » dans un incubateur, avec des mentors assignés. Ils doivent démontrer une diversité de contributeurs et une capacité de décision indépendante avant de graduer. Sur 335 projets assistés, 239 ont atteint le statut de Top-Level Project. Le conseil d'administration fournit une supervision organisationnelle mais **aucune direction technique** — les Project Management Committees décident de tout.
+
+## Les outils qui aident (et ceux qui manquent)
+
+Face au volume croissant de contributions, les grands projets ont développé des arsenaux d'automatisation sophistiqués que Ghostty, en tant que projet plus modeste, n'emploie pas encore pleinement.
+
+**Visual Studio Code** de Microsoft représente l'état de l'art. Des modèles de machine learning assignent automatiquement les issues aux domaines fonctionnels appropriés. Un bot de feature requests ferme automatiquement les demandes n'atteignant pas 20 upvotes en 60 jours. Des labels « needs more info » sont appliqués automatiquement avec relance. Les issues sont verrouillées après 45 jours d'inactivité une fois fermées.
+
+Les **templates d'issues** GitHub, au format YAML, forcent une saisie structurée : version, navigateur, étapes de reproduction. Ils peuvent appliquer automatiquement des labels et rediriger vers des ressources externes. Désactiver les issues « blanches » force l'utilisation des templates.
+
+Le **noyau Linux** maintient une approche différente, délibérément hors de GitHub. Les patches sont soumis via listes de diffusion, nécessitant une certification « Signed-off-by ». Les contributions anonymes sont refusées. Un fichier MAINTAINERS spécifie qui révise quel sous-système. Cette friction intentionnelle filtre les contributions de faible qualité.
+
+Le processus RFC de Rust fonctionne comme un filtre pour les changements substantiels. Les discussions pré-RFC sont encouragées avant la soumission formelle. Les RFCs proposées hâtivement peuvent être rapidement rejetées. Une « Final Comment Period » assure une révision large. Les PRs implémentant des fonctionnalités sans RFC peuvent être fermées avec demande de soumettre d'abord une RFC.
+
+## Ghostty dans le miroir de ses prédécesseurs
+
+La décision de Hashimoto n'est pas sans précédent, mais elle s'inscrit dans une série de controverses qui ont façonné la culture open source.
+
+L'incident **npm left-pad** de mars 2016 reste emblématique. Le développeur Azer Koçulu a dépublié 272 modules après un différend avec Kik concernant un nom de package. Cette décision a cassé des milliers de projets dont Babel et React. npm a pris la mesure « sans précédent » de restaurer le package, puis modifié ses politiques : les packages de plus de 24 heures avec des dépendants ne peuvent plus être supprimés.
+
+En 2025, **nut.js** a connu un épisode similaire. Son mainteneur a publié un billet « I Give Up » expliquant l'insoutenabilité du travail gratuit, retirant temporairement le package de npm et perturbant les projets dépendants.
+
+La controverse **Chef/ICE** de 2019 a soulevé une question différente : les développeurs peuvent-ils contrôler l'usage de leur logiciel open source ? Seth Vargo a retiré Chef Sugar après avoir appris qu'ICE l'utilisait via Chef. Cet incident a alimenté les débats sur la Hippocratic License et les limites éthiques de l'open source.
+
+Jamie Tanna, contributeur au projet Renovate, a publié le 7 janvier 2026 un billet détaillant pourquoi Renovate utilise la même approche que Ghostty. Il note que « la propre notice de Ghostty était une source d'inspiration importante pour celle de Renovate », suggérant que cette pratique pourrait se répandre.
+
+## La question de fond : à qui appartient l'open source ?
+
+La controverse Ghostty cristallise une tension fondamentale dans l'écosystème open source : le déséquilibre entre les attentes des utilisateurs et les capacités des mainteneurs.
+
+D'un côté, l'open source a créé une culture d'accessibilité. N'importe qui peut ouvrir une issue, soumettre une PR, participer. Cette ouverture est au cœur de son succès. De l'autre, cette même ouverture peut devenir un vecteur de surcharge. Quand Hashimoto estime que 80-90% des issues sont des faux positifs, il décrit une réalité où le temps passé à trier dépasse le temps de développement.
+
+La critique selon laquelle un simple label « ready-to-work » suffirait manque peut-être un point subtil : le coût cognitif. Un tracker avec 500 issues ouvertes, même bien labellisées, projette une image de dette technique accumulée. Pour un projet personnel maintenu sur temps libre, cette pression visuelle constante peut être démoralisante. Les Discussions, moins visibles, moins comptabilisées, offrent un espace intermédiaire.
+
+Mais cette approche a un coût : la friction pour les utilisateurs légitimes. Quelqu'un découvrant un vrai bug doit naviguer deux systèmes au lieu d'un. Les problèmes complexes, comme les fuites mémoire signalées par plusieurs utilisateurs, risquent de se fragmenter entre discussions, Discord et Twitter sans jamais atteindre le statut formel qui attirerait l'attention d'un contributeur potentiel.
+
+L'initiative **Open Source Pledge**, lancée par Sentry en 2024, propose une solution différente : faire payer les entreprises. Les signataires s'engagent à verser **2 000 dollars par développeur employé** aux projets open source qu'ils utilisent. Sentry elle-même contribue 5 813 dollars par développeur, soit 750 000 dollars au total. Cette approche attaque le problème en amont : des mainteneurs rémunérés peuvent consacrer du temps au triage sans y perdre leur santé mentale.
+
+Les données du rapport Tidelift soutiennent cette intuition. Les mainteneurs rémunérés sont **55% plus susceptibles** d'implémenter des pratiques de sécurité critiques. Ils résolvent les vulnérabilités **45% plus rapidement** et ont **50% moins de vulnérabilités** au total. L'argent, en libérant du temps et en réduisant le stress, améliore la qualité.
+
+## Ce que Ghostty révèle sur l'avenir de l'open source
+
+La décision de Mitchell Hashimoto n'est ni révolutionnaire ni scandaleuse. Elle est symptomatique d'une évolution plus large : la professionnalisation inévitable de la maintenance open source.
+
+Les projets qui grandissent doivent choisir entre plusieurs voies. Certains, comme Curl avec ses 5 issues ouvertes, maintiennent une discipline rigoureuse permettant un tracker minimaliste. D'autres, comme VS Code, investissent massivement dans l'automatisation. D'autres encore, comme Ghostty, érigent des barrières procédurales pour filtrer en amont.
+
+Aucune de ces approches n'est universellement supérieure. Le modèle optimal dépend de la taille du projet, des ressources disponibles, et de la personnalité du mainteneur. Hashimoto, habitué aux organisations de milliers d'employés, a choisi une structure bureaucratique pour gérer son projet personnel. C'est cohérent avec son expérience, même si cela peut sembler disproportionné pour un terminal.
+
+La vraie leçon de cette controverse n'est pas que Hashimoto a tort ou raison. C'est que l'open source, tel qu'il existe aujourd'hui, repose sur un contrat social fragile. Les utilisateurs attendent un logiciel gratuit et de qualité, avec un support réactif. Les mainteneurs offrent leur temps sans garantie de réciprocité. Cette asymétrie, tenable quand les projets restaient petits, devient explosive à l'échelle.
+
+Les 712 points sur Hacker News ne reflètent pas tant un jugement sur Ghostty qu'une anxiété collective de la communauté technique. Si même Mitchell Hashimoto — financièrement indépendant après l'acquisition d'HashiCorp, techniquement accompli, respecté universellement — ressent le besoin de se protéger du volume d'interactions, que dire des mainteneurs ordinaires ?
+
+L'écosystème open source approche peut-être un point d'inflexion. Les fondations se multiplient, les pledges de financement émergent, les outils d'automatisation se sophistiquent. Mais le problème fondamental — comment distribuer équitablement le fardeau de la maintenance — reste sans solution élégante. Ghostty, avec son terminal rapide et ses discussions obligatoires, n'est qu'un symptôme de plus d'une équation qui refuse de s'équilibrer.
