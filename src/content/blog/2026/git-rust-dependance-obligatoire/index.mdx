@@ -1,0 +1,96 @@
+---
+title: "Git adopte Rust comme dépendance obligatoire : une transition historique"
+description: "Git 3.0 rendra Rust obligatoire en 2026. Analyse des enjeux de sécurité, des défis de portabilité et des débats qui divisent la communauté."
+date: 2026-01-11
+categories: ["Open Source", "Développement"]
+tags: ["git", "rust", "c", "linux", "securite-memoire", "open-source"]
+author: admin
+draft: false
+featured: false
+---
+
+**Git franchira un cap décisif avec sa version 3.0, prévue pour le second semestre 2026 : Rust deviendra une dépendance obligatoire pour compiler le logiciel.** Cette décision, formalisée par un RFC de Patrick Steinhardt en septembre 2025, marque un tournant majeur pour l'un des outils les plus fondamentaux de l'écosystème logiciel mondial. Après des décennies de développement exclusivement en C, Git rejoint le mouvement impulsé par le noyau Linux, sudo-rs et d'autres projets critiques vers les langages à sécurité mémoire. La transition suscite des débats passionnés, opposant les impératifs de sécurité aux préoccupations de portabilité et aux traditions du développement système.
+
+## De l'expérimentation à l'obligation : une transition progressive
+
+L'histoire de Rust dans Git commence véritablement en **janvier 2024**, lorsque **Taylor Blau** (GitHub) ouvre la discussion sur la mailing list officielle. Il liste les avantages attendus : sécurité mémoire, absence de data races, refactoring simplifié, et facilitation de l'accès aux nouveaux contributeurs. La proposition est débattue lors du Git Contributor's Summit en septembre 2024, sans décision ferme.
+
+Le premier code Rust entre officiellement dans Git avec la **version 2.49** (14 mars 2025). Josh Steadmon introduit deux crates : `libgit-sys` pour les liaisons FFI bas niveau et `libgit-rs` pour une interface idiomatique Rust. Ce code reste dans le répertoire `contrib/` et se limite à l'interface avec git-config. Le 15 septembre 2025, **Patrick Steinhardt**, Engineering Manager chez GitLab et mainteneur Git, soumet le RFC décisif intitulé « Introduce Rust and announce that it will become mandatory ».
+
+La stratégie adoptée suit un schéma en trois temps. D'abord, donner du temps à l'expérimentation et à la mise en place de l'infrastructure de build. Ensuite, permettre aux distributeurs de s'adapter progressivement aux nouvelles exigences de toolchain. Enfin, annoncer formellement que **Git 3.0 rendra Rust obligatoire**. Le sous-système `varint` a été choisi comme premier « ballon d'essai » — un composant trivial sans dépendances — permettant de tester l'interopérabilité C/Rust avant d'attaquer des modules plus critiques comme la bibliothèque xdiff (réécriture en cours par Elijah Newren) ou le code SHA-256 (brian m. carlson).
+
+## Les vulnérabilités qui justifient cette migration
+
+Les failles de sécurité récentes de Git illustrent parfaitement les limites du C pour les logiciels critiques. En 2024 seul, plusieurs CVE critiques ont été découvertes : **CVE-2024-32002** permettait l'exécution de code à distance via des submodules exploitant une confusion de liens symboliques sur les systèmes de fichiers insensibles à la casse. **CVE-2022-23521** et **CVE-2022-41903** révélaient des dépassements de tampon heap causés par des integer overflows lors du parsing de fichiers `.gitattributes`.
+
+Ces vulnérabilités ne sont pas des cas isolés. Les données de Microsoft et Google montrent que **70% des failles de sécurité** dans leurs bases de code proviennent de problèmes de sécurité mémoire. Un audit de sécurité Git de 2023 par X41 D-SEC GmbH et GitLab a identifié huit vulnérabilités, recommandant explicitement des « safe wrappers » et des « compiler level checks » — exactement ce que Rust propose.
+
+Rust élimine ces classes de bugs par conception. Son système d'ownership empêche les use-after-free et double-free. Les règles de borrowing interdisent les data races à la compilation. L'absence de pointeurs null natifs et les types `Option<T>` et `Result<T,E>` forcent une gestion explicite des cas d'erreur. Pour Git, qui manipule des données utilisateur potentiellement malveillantes (submodules, pack files, attributs), ces garanties transforment des vecteurs d'attaque en erreurs de compilation.
+
+## Comparaison avec les autres projets ayant franchi le pas
+
+Le noyau Linux offre le précédent le plus significatif. Après une proposition initiale en 2019, le premier code Rust a été intégré dans la version 6.1 en octobre 2022. En décembre 2025, au Kernel Maintainers Summit, **l'étiquette « expérimental » a été officiellement retirée** — Rust fait désormais partie intégrante du noyau. Les appareils Android 16 embarquent déjà un allocateur mémoire ashmem écrit en Rust, touchant des millions d'utilisateurs. Le sous-système DRM prévoit de rendre Rust obligatoire et d'interdire le C pour les nouveaux pilotes d'ici un an.
+
+Le projet **sudo-rs** représente une autre success story. Financé par l'ISRG (Prossimo) et AWS, ce remplacement de sudo en Rust a atteint sa première version stable en août 2023. Un tiers des bugs de sécurité du sudo original étaient liés à la gestion mémoire. sudo-rs est devenu **la version par défaut dans Ubuntu 25.10** et sera intégré dans Ubuntu 26.04 LTS. Le projet a même découvert des bugs dans le sudo C original lors de son audit de sécurité.
+
+Le contre-exemple vient de **curl**. L'intégration du backend Rust Hyper, financée par l'ISRG depuis 2020, a été **abandonnée en décembre 2024** malgré 95% des 800 tests HTTP passants. Daniel Stenberg, créateur de curl, a expliqué : « Le chevauchement dans le diagramme de Venn des deux univers n'est pas assez grand. » Le projet souffrait d'un manque de développeurs maîtrisant à la fois C et Rust, et d'une demande utilisateur insuffisante. Cette expérience sert d'avertissement : l'hybridation C/Rust exige un engagement soutenu et des compétences rares.
+
+## Le problème du bootstrapping divise la communauté
+
+La critique la plus technique concerne le **bootstrapping** — le problème de la poule et de l'œuf. Rust nécessite un compilateur Rust existant pour se compiler. Pour obtenir Rust, on clone généralement des dépôts... via Git. Ce cercle vicieux pose des défis concrets aux distributions qui construisent tout depuis les sources.
+
+Les alternatives existent mais restent imparfaites. **mrustc**, un compilateur C++ capable de produire du C à partir de Rust, permet de bootstrapper Rust 1.54, mais n'a pas suivi les évolutions du langage. Le projet **gccrs** (frontend Rust pour GCC) progresse mais ne peut toujours pas compiler les programmes Rust complets. Le RFC de Steinhardt mentionne explicitement que le timing optimal serait lié à la maturité de gccrs : « which would make things smoother, since platforms which support gcc would also be included. »
+
+La situation rappelle les débats sur Firefox et la bibliothèque Python cryptography, qui ont successivement forcé les distributions à intégrer Rust. Un commentaire sur les forums Phoronix résume la frustration : « Récemment au travail, nous avons dû gérer une demande python3-cryptography qui nécessite Rust... ce fut une expérience particulièrement pénible en 30 ans de développement Unix. »
+
+## Les plateformes orphelines au cœur des controverses
+
+**Randall Becker**, mainteneur de Git sur la plateforme HPE NonStop (utilisée dans le secteur financier pour les systèmes haute fiabilité), incarne l'opposition la plus structurée. NonStop n'a aucun support Rust et gère « 100 millions à 1 milliard de lignes de code » via Git. Becker avertit : « Adopter Rust limitera rapidement (ou éliminera) la viabilité à long terme de Git. »
+
+La réponse de **Junio Hamano**, mainteneur principal de Git depuis 2005, a été pragmatique voire abrupte : les corporations qui ressentiront un « impact lié à leurs investissements » sont « les bienvenues pour embaucher des développeurs qualifiés. » Cette position reflète une réalité économique : les plateformes de niche doivent financer leur propre maintenance si elles ne peuvent suivre l'évolution du projet principal.
+
+Le système de tiers de Rust illustre l'étendue du problème. Les plateformes **Tier 1** (x86_64, ARM64 sur Linux/Windows/macOS) bénéficient d'un support complet. Les architectures comme s390x (mainframes IBM), MIPS ou PowerPC se retrouvent en **Tier 2** avec un support limité. Alpha, HP PA-RISC, IA-64 et certaines configurations embarquées n'ont **aucun support Rust**. Pour Git, outil universel par excellence, cette fragmentation représente un recul objectif de portabilité.
+
+## Implications majeures pour les distributions Linux
+
+**Debian** a développé une infrastructure complète de packaging Rust via l'outil `debcargo`, mais la complexité reste significative. Chaque crate doit être packageé comme un paquet Debian source séparé. Le bootstrapping nécessite des profils de build spéciaux pour casser les dépendances circulaires entre rustc et cargo. En 2021, l'adoption de Rust par la bibliothèque Python cryptography a failli forcer Debian à abandonner le support des architectures alpha, hppa, ia64 et m68k.
+
+**Fedora** utilise `rust2rpm` pour automatiser la création de fichiers spec depuis crates.io, mais reconnaît que certaines applications Rust sont « impackageables » à cause d'arbres de dépendances massifs. Le moteur de jeu Bevy, par exemple, nécessite environ 390 crates dont la moitié n'est pas packagée pour Fedora.
+
+**Alpine Linux** présente une complexité supplémentaire : sa libc musl nécessite des patches LLVM spécifiques et des images Docker dédiées comme `rust-musl-builder`. Le support fonctionne sur les architectures majeures mais demande une infrastructure de build additionnelle.
+
+La tendance générale est cependant à l'acceptation. Le gestionnaire de paquets APT de Debian aura des **dépendances Rust obligatoires à partir de mai 2026**. Le noyau Linux a adopté la politique de toujours pouvoir être compilé avec la version Rust présente dans la dernière Debian stable. Git suivra probablement une approche similaire, établissant un plancher de version Rust compatible avec les distributions majeures.
+
+## L'argument des nouveaux contributeurs face à la résistance des anciens
+
+La dimension humaine structure profondément ce débat. Un contributeur Git sur Lobste.rs confie : « J'ai soumis des patches à Git et je ne suis pas ravi d'être forcé d'apprendre Rust si je veux contribuer à l'avenir. C me semble un langage plus simple. » Cette résistance est répandue chez les développeurs système expérimentés. Lors du débat Rust dans le noyau Linux, **Ted Ts'o** (mainteneur ext4) a déclaré : « Voilà le truc, vous n'allez pas nous forcer tous à apprendre Rust. »
+
+À l'inverse, les partisans de Rust soulignent un problème de renouvellement générationnel. Un commentaire sur les forums résume : « Les anciens projets C n'attirent tout simplement plus assez de nouveaux développeurs. Personne ne se bouscule pour rejoindre le projet Git et écrire du C. Les développeuses de 19 ans intéressées par la programmation système travaillent toutes en Rust. » Cette observation, bien que provocatrice, reflète des données tangibles : Rust est le langage « le plus aimé » depuis **neuf années consécutives** dans les sondages Stack Overflow.
+
+**brian m. carlson**, contributeur Git, apporte un témoignage de première main : « Ayant partiellement porté notre service de trafic Git de C vers Rust (sans que le public ne l'ait remarqué), c'est un environnement de travail bien plus agréable. Je suis aussi beaucoup plus efficace pour effectuer des modifications. » Les données Google suggèrent que plus de deux tiers des développeurs se sentent capables de contribuer à une base de code Rust en moins de deux mois.
+
+## Linus Torvalds et la question des langages système
+
+La position de **Linus Torvalds** sur Rust a évolué vers un soutien pragmatique. En septembre 2024, à l'Open Source Summit de Vienne, il comparait les débats C/Rust aux guerres vi/Emacs : « Je ne suis pas sûr de comprendre pourquoi Rust est devenu un sujet si contentieux... cela a pris des accents presque religieux. » Sur le C, il reconnaît le double tranchant : « C est, au fond, un langage très simple. C'est une des raisons pour lesquelles j'apprécie C et pourquoi beaucoup de programmeurs C l'apprécient, même si l'autre côté de la médaille est évidemment que, parce qu'il est simple, il est aussi très facile de faire des erreurs. »
+
+En 2025, à l'Open Source Summit Korea, Torvalds a marqué un tournant : « Je pense que nous avons atteint un stade où Rust fait vraiment partie du noyau, et ce n'est plus juste quelque chose d'expérimental. » Cette validation du projet Rust for Linux renforce la légitimité des initiatives similaires dans d'autres projets fondamentaux comme Git.
+
+Le gouvernement américain a ajouté son poids au débat. En février 2024, le rapport de l'ONCD (Office of the National Cyber Director) de la Maison Blanche a explicitement recommandé la migration vers des langages memory-safe, citant Rust. « Certains des événements cyber les plus infâmes de l'histoire — le ver Morris de 1988, le ver Slammer de 2003, la vulnérabilité Heartbleed de 2014 — ont tous une cause racine commune : les vulnérabilités de sécurité mémoire. »
+
+## Le déclin progressif du C dans l'infrastructure critique
+
+Les indicateurs sectoriels convergent vers un reflux du C. L'IEEE Spectrum 2024 classe C en **9ème position** (contre 4ème précédemment). Le TIOBE Index montre une chute de la 2ème à la 4ème place. Stack Overflow 2024 place C seulement 12ème dans les langages « désirés » et « admirés ».
+
+**Microsoft** a annoncé son intention d'« éliminer chaque ligne de C et C++ d'ici 2030 ». Le noyau Windows intègre déjà du Rust. Google l'utilise dans l'Android Open Source Project et Chrome. Amazon/AWS a construit Firecracker (qui propulse Lambda et Fargate) entièrement en Rust. Cloudflare a migré son proxy Pingora vers Rust, gérant désormais plus d'**un trillion de requêtes par jour**.
+
+Les arguments pour le maintien du C restent substantiels : des billions de lignes de code de production existent, la performance brute reste inégalée dans certains contextes contraints, et 50 ans d'écosystème (outils, bibliothèques, expertise) ne s'effacent pas. La norme C23 continue d'évoluer activement. Mais le consensus émergent ressemble à celui exprimé par JetBrains : « L'avenir n'est pas C++ ou Rust. C'est les deux, utilisés là où chacun fait sens. »
+
+## Conclusion : un basculement inévitable mais mesuré
+
+L'adoption de Rust par Git représente bien plus qu'un choix technique — c'est un signal fort sur l'évolution des normes de développement pour l'infrastructure logicielle critique. Le RFC de Patrick Steinhardt incarne une approche mesurée : introduction progressive, période optionnelle, attention aux dépendances de toolchain, et fenêtre d'adaptation pour les distributions.
+
+Le débat révèle des tensions structurelles profondes : sécurité contre portabilité, modernisation contre continuité, nouveaux contributeurs contre expertise établie. L'échec de curl/Hyper rappelle que l'hybridation C/Rust n'est pas garantie de succès. Mais les réussites du noyau Linux et de sudo-rs démontrent qu'avec un engagement institutionnel soutenu, la transition est viable.
+
+Pour les décideurs et les organisations dépendantes de Git, les implications sont claires. Les plateformes majeures (x86_64, ARM64) ne seront pas affectées. Les systèmes de niche devront évaluer leurs options : financer le portage Rust, maintenir des forks, ou migrer vers des alternatives. Les contributeurs devront progressivement acquérir des compétences Rust. Et les chaînes de build devront intégrer une toolchain supplémentaire avec ses propres exigences de bootstrapping.
+
+La date de Git 3.0, estimée au second semestre 2026, donne environ **18 mois de préparation** à l'écosystème. Cette fenêtre sera déterminante pour observer si la communauté Git peut éviter les écueils qui ont condamné curl/Hyper tout en capitalisant sur les succès du noyau Linux. L'histoire de l'informatique s'écrit en ce moment même, un commit à la fois.
