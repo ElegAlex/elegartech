@@ -62,6 +62,20 @@ const readingTime = Math.ceil(post.body.split(/\s+/).length / 200);
         <time datetime={date.toISOString()}>{formattedDate}</time>
         <span>·</span>
         <span>{readingTime} min de lecture</span>
+        <span class="print-hide">·</span>
+        <button
+          type="button"
+          onclick="window.print()"
+          class="print-btn print-hide"
+          title="Imprimer / Enregistrer en PDF"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9V2h12v7"/>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+            <rect x="6" y="14" width="12" height="8"/>
+          </svg>
+          <span>PDF</span>
+        </button>
       </div>
     </header>
 

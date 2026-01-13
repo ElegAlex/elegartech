@@ -58,6 +58,19 @@
 }
 
 @layer components {
+  /* Print button */
+  .print-btn {
+    @apply inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs transition-colors cursor-pointer;
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: none;
+  }
+
+  .print-btn:hover {
+    color: var(--accent-primary);
+    background-color: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+  }
+
   /* Code blocks styling */
   pre {
     @apply relative rounded-lg p-4 overflow-x-auto;
@@ -222,5 +235,136 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+}
+
+/* Print styles */
+@media print {
+  /* Force light theme for printing */
+  :root {
+    --bg-primary: #FFFFFF !important;
+    --bg-secondary: #F6F8FA !important;
+    --bg-tertiary: #EAEEF2 !important;
+    --text-primary: #000000 !important;
+    --text-secondary: #333333 !important;
+    --text-muted: #666666 !important;
+    --accent-primary: #0969DA !important;
+    --code-bg: #F6F8FA !important;
+    --code-border: #D0D7DE !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  /* Hide non-essential elements */
+  .print-hide,
+  nav,
+  header:not(article header),
+  footer:not(article footer),
+  aside,
+  .copy-btn,
+  [data-giscus],
+  .giscus,
+  #giscus-container {
+    display: none !important;
+  }
+
+  /* Article styling */
+  article {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Headings */
+  h1, h2, h3, h4, h5, h6 {
+    color: black !important;
+    page-break-after: avoid;
+  }
+
+  h1 {
+    font-size: 24pt !important;
+  }
+
+  h2 {
+    font-size: 18pt !important;
+  }
+
+  h3 {
+    font-size: 14pt !important;
+  }
+
+  /* Prose content */
+  .prose,
+  .prose p,
+  .prose li,
+  .prose strong,
+  .prose em,
+  .prose blockquote,
+  .prose thead th,
+  .prose tbody td {
+    color: black !important;
+  }
+
+  .prose a {
+    color: #0969DA !important;
+    text-decoration: underline !important;
+  }
+
+  /* Show URL after links */
+  .prose a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666 !important;
+  }
+
+  /* Code blocks */
+  pre {
+    background-color: #F6F8FA !important;
+    border: 1px solid #D0D7DE !important;
+    page-break-inside: avoid;
+    overflow-x: visible !important;
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+  }
+
+  pre code {
+    color: black !important;
+  }
+
+  :not(pre) > code {
+    background-color: #F6F8FA !important;
+    border-color: #D0D7DE !important;
+    color: #1A7F37 !important;
+  }
+
+  /* Badges */
+  .category-badge,
+  .difficulty-badge,
+  .tag {
+    background-color: #EAEEF2 !important;
+    color: #333 !important;
+    border: 1px solid #D0D7DE !important;
+  }
+
+  /* Images */
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  /* Page breaks */
+  p, blockquote, ul, ol, table {
+    page-break-inside: avoid;
+  }
+
+  /* Author bio */
+  article footer > div {
+    background-color: #F6F8FA !important;
+    border: 1px solid #D0D7DE !important;
   }
 }
