@@ -2,7 +2,6 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '@layouts/BaseLayout.astro';
 import ArticleCard from '@components/ArticleCard.astro';
-import Newsletter from '@components/Newsletter.astro';
 
 const allPosts = await getCollection('blog', ({ data }) => {
   return !data.draft && data.date <= new Date();
@@ -101,10 +100,4 @@ const categories = [
     </div>
   </section>
 
-  <!-- Newsletter -->
-  <section class="py-12 px-4">
-    <div class="max-w-2xl mx-auto">
-      <Newsletter />
-    </div>
-  </section>
 </BaseLayout>
