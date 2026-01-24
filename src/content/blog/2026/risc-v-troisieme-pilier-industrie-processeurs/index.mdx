@@ -1,0 +1,111 @@
+---
+title: "RISC-V s'impose comme le troisième pilier de l'industrie des processeurs"
+description: "L'architecture RISC-V atteint 25% des nouveaux designs silicium en 2026, portée par les acquisitions Qualcomm/Ventana et Meta/Rivos, et les investissements européens."
+date: 2026-01-24
+categories: ["Open Source", "Systèmes"]
+tags: ["RISC-V", "processeurs", "ARM", "x86", "NVIDIA", "SiFive", "Tenstorrent", "souveraineté numérique", "Europe"]
+author: admin
+draft: false
+featured: false
+---
+
+L'architecture RISC-V a franchi un cap décisif en janvier 2026 : elle représente désormais **25% des nouveaux designs silicium**, mettant fin au duopole historique x86/ARM. Cette percée s'accompagne d'une consolidation industrielle majeure — acquisition de Ventana par Qualcomm, partenariat SiFive-NVIDIA NVLink Fusion — et d'investissements européens massifs visant la souveraineté numérique. En six ans, RISC-V International est passé de 236 à **4 600 membres** dans 70 pays, tandis que NVIDIA a livré à lui seul plus d'un milliard de cœurs RISC-V en 2024.
+
+## Le marché atteint un point d'inflexion historique
+
+Les données du rapport annuel RISC-V International 2025 confirment l'accélération fulgurante de l'adoption. Selon l'analyse SHD Group présentée au RISC-V Summit d'octobre 2025, la pénétration du marché devrait passer de **2,5% en 2021 à 33,7% en 2031** — une multiplication par treize en une décennie. Les analystes d'Omdia anticipaient initialement 25% de parts de marché pour 2030 ; RISC-V a donc cinq ans d'avance sur les projections.
+
+La croissance se mesure également en volume de cœurs déployés. NVIDIA constitue le plus grand utilisateur mondial avec **plus d'un milliard de cœurs RISC-V** expédiés en 2024, intégrés dans ses GPU pour les fonctions de contrôle et de gestion. Qualcomm totalise plus de 650 millions de cœurs cumulés, Western Digital dépasse les 2 milliards dans ses dispositifs de stockage. Le marché global atteint **2,30 milliards de dollars en 2025** selon Global Market Insights, avec un CAGR projeté de 30,7% jusqu'en 2034.
+
+La répartition sectorielle révèle des dynamiques contrastées. L'IoT et l'embarqué dominent avec environ 30% du marché, tirés par l'absence de royalties et la personnalisation possible. L'automobile affiche la croissance la plus rapide (CAGR 20-30%), portée par les besoins en ADAS et véhicules définis par logiciel. Le datacenter reste émergent mais stratégique : Alibaba Cloud prévoit que RISC-V deviendra une architecture cloud mainstream d'ici 2030.
+
+## SiFive intègre NVLink Fusion tandis que GlobalFoundries acquiert le portefeuille Synopsys
+
+La semaine du 14-15 janvier 2026 a vu deux annonces structurantes pour l'écosystème. Le 15 janvier, SiFive est devenu le **premier fournisseur RISC-V** à rejoindre l'écosystème NVLink Fusion de NVIDIA, aux côtés d'ARM, Intel, AWS, Fujitsu et Qualcomm. Cette intégration apporte une bande passante bidirectionnelle de **3,6 TB/s** grâce à la technologie NVLink-C2C de sixième génération, offrant un lien cache-cohérent à latence quasi nulle entre CPU et GPU.
+
+Jensen Huang a déclaré : _« Avec SiFive, nous apportons notre interconnexion NVLink cohérente et haute bande passante à l'écosystème RISC-V. Cela offre la flexibilité de combiner des CPU RISC-V personnalisables avec les accélérateurs NVIDIA pour construire une infrastructure AI évolutive et spécialisée. »_ Les produits issus de ce partenariat sont attendus sur le marché en 2027.
+
+La veille, le 14 janvier, **GlobalFoundries a annoncé l'acquisition** du portefeuille d'IP processeurs de Synopsys, incluant les cœurs ARC-V (RISC-V), ARC Classic, les DSP VPX, les NPU NPX et les outils de développement MetaWare. Cette transaction, dont les termes financiers n'ont pas été divulgués, représente la deuxième acquisition CPU de GlobalFoundries en moins d'un an, après MIPS en août 2025. Tim Breen, CEO de GlobalFoundries, a souligné l'ambition de créer un fournisseur « one-stop shop » combinant IP et fabrication pour l'« IA physique ».
+
+Deux autres acquisitions majeures ont marqué fin 2025 :
+
+- **Qualcomm a acquis Ventana Micro Systems** pour environ 2,4 milliards de dollars en décembre 2025, obtenant les cœurs haute performance Veyron RVA23 et déclarant ainsi son « indépendance » vis-à-vis d'ARM
+- **Meta a acquis Rivos** pour environ 2 milliards de dollars en septembre 2025, renforçant son programme MTIA avec des accélérateurs AI RISC-V compatibles CUDA
+
+## Tenstorrent vise la parité avec Zen 5 et Neoverse V3
+
+Le cœur **TT-Ascalon** de Tenstorrent représente la tentative la plus ambitieuse de positionner RISC-V face aux architectures dominantes. Conforme au profil RVA23, ce processeur 64 bits out-of-order supporte une configuration allant de 2 à 8 voies d'émission (Ascalon-X pour la version 8 voies). L'architecture intègre 6 ALU, 2 FPU, des unités vectorielles duales de 256 bits conformes à RVV 1.0, et des fonctionnalités avancées de sécurité incluant l'atténuation des canaux auxiliaires.
+
+Les benchmarks publiés par Tenstorrent affichent des scores supérieurs à **22 SPECint 2006/GHz** et **2,3 SPECint 2017/GHz**, avec une fréquence dépassant 2,5 GHz sur le process Samsung SF4X. Des analyses industrielles de fin 2025 évoquent une « parité de performance » avec AMD Zen 5 et ARM Neoverse V3 sur les charges de travail entières — une première pour RISC-V dans le segment haute performance. Ces résultats restent toutefois issus principalement de sources marketing Tenstorrent et attendent une validation indépendante.
+
+Jim Keller, CEO de Tenstorrent et architecte légendaire (AMD K8, Apple A4/A5, Tesla FSD), défend une vision radicale : _« Je crois que dans les 5 à 10 prochaines années, RISC-V dominera tous les datacenters. Le supercalcul pourrait basculer encore plus vite. »_ Sa stratégie repose sur l'open source intégral du stack logiciel (TT-Metalium, TT-NN, TT-Forge) et la licence RTL permettant aux clients de modifier la logique interne — une rupture avec l'approche « boîte noire » d'ARM.
+
+L'accélérateur AI **Blackhole** de génération 2 illustre cette philosophie : 140 cœurs Tensix++, 16 « gros » cœurs RISC-V 64 bits capables d'exécuter Linux sans hôte x86, 745 TOPS en FP8, et 4 Tbps de connectivité Ethernet pour l'évolutivité via réseau standard plutôt que via interconnexion propriétaire. Tenstorrent cible explicitement les pays souhaitant contrôler leur stack technologique — Chypre, Japon via Rapidus, et bientôt l'Espagne.
+
+## NVIDIA déploie jusqu'à 40 cœurs RISC-V par puce Rubin
+
+L'architecture Rubin de NVIDIA intègre entre **10 et 40 cœurs RISC-V** selon la configuration, confirmant les déclarations de Frans Sijstermans, VP Architecture Multimédia, lors du RISC-V Summit 2024. Ces cœurs NV-RISCV remplacent les contrôleurs Falcon legacy utilisés pendant deux décennies, offrant une amélioration de performance de **3x** tout en conservant une empreinte silicium comparable.
+
+Les fonctions assurées par ces cœurs couvrent l'orchestration du boot sécurisé, la régulation de puissance, la gestion de la cohérence mémoire NVLink-C2C (1,8 TB/s entre CPU Vera et GPU Rubin), les contrôleurs vidéo et d'affichage, et le GPU System Processor (GSP) qui crée une abstraction des capacités GPU pour les drivers hôtes. NVIDIA a développé trois types de cœurs : NV-RISCV32 (32 bits, in-order, applications contraintes en surface), NV-RISCV64 (64 bits, out-of-order dual-issue, tâches complexes), et NV-RVV (avec extension vectorielle 1024 bits pour le traitement de données).
+
+La transition vers RISC-V a débuté en 2015-2016 après évaluation d'ARM, MIPS et d'autres ISA. NVIDIA a contribué à la standardisation RISC-V notamment via l'extension pointer masking, tout en développant plus de 20 extensions propriétaires optimisant la sécurité et les performances spécifiques à ses besoins.
+
+L'annonce de juillet 2025 du **portage de CUDA vers RISC-V** constitue un signal majeur pour l'écosystème. Combiné au partenariat NVLink Fusion avec SiFive, cela positionne RISC-V comme « citoyen de première classe » dans l'infrastructure AI de NVIDIA — une validation considérable pour l'architecture ouverte.
+
+## L'extension VME reste en cours de standardisation
+
+Contrairement aux informations parfois circulant, **aucune extension matricielle RISC-V n'a été ratifiée** en janvier 2026. RISC-V International poursuit trois approches parallèles via des Task Groups distincts :
+
+L'**Integrated Matrix Extension (IME)** adopte une philosophie minimaliste, réutilisant les registres et unités de calcul vectoriels existants du RVV. Cette approche offre une efficacité en ressources mais limite les performances au cadre des registres vectoriels.
+
+La **Vector-Matrix Extension (VME)** propose un équilibre en ajoutant des accumulateurs matriciels dédiés pour les résultats (matrice C) tout en utilisant les registres RVV pour les opérandes sources. L'opération de base est un produit externe accumulé.
+
+L'**Attached Matrix Extension (AME)** suit le modèle d'ARM SME et Intel AMX avec des registres matriciels 2D dédiés, découplés du système vectoriel. L'implémentation la plus avancée est le Matrix-Multiply Extension (MME) d'Alibaba XuanTie, intégré dans le processeur C907 : 8 registres matriciels configurables de 128 à 1024+ bits par ligne, support FP32/FP16/BF16/INT8/INT4, accélération de **4 à 7x** par rapport aux implémentations vectorielles seules.
+
+Cette fragmentation crée une incertitude pour les développeurs logiciels, contrairement à ARM qui propose une seule extension SME ratifiée. La standardisation RISC-V privilégie la flexibilité au prix de la convergence.
+
+## L'Europe investit 270 millions d'euros dans le projet DARE
+
+Le projet **Digital Autonomy with RISC-V in Europe (DARE)** représente l'initiative européenne la plus ambitieuse en matière de souveraineté numérique via RISC-V. Doté d'un Framework Partnership Agreement de **270 millions d'euros** sur six ans (2024-2030), le projet a lancé sa première phase (SGA1) de 240 millions d'euros en mars 2025, coordonnée par le Barcelona Supercomputing Center avec 38 partenaires de 13 pays européens.
+
+Trois chiplets RISC-V sont en développement :
+
+- **VEC (Vector Accelerator)** par Openchip pour le HPC haute précision et la convergence HPC-AI
+- **AIPU (AI Processing Unit)** par Axelera AI pour l'accélération d'inférence
+- **GPP (General-Purpose Processor)** par Codasip pour les charges HPC générales
+
+Le EU Chips Act, doté de 43 milliards d'euros, a explicitement identifié RISC-V comme « technologie de prochaine génération où l'Europe devrait investir pour préserver et renforcer son leadership ». L'objectif stratégique est triple : réduire la dépendance envers les architectures américaines (x86) et britanniques (ARM), éliminer les risques liés aux contrôles d'exportation, et développer une capacité de vérification des circuits (« silicon vérifiable ») face aux préoccupations de sécurité.
+
+L'European Processor Initiative (EPI) poursuit parallèlement le développement du processeur Rhea (ARM Neoverse V1, 80 cœurs) de SiPearl pour le supercalculateur JUPITER — premier système exascale européen prévu pour 2026 — tout en avançant sur l'accélérateur RISC-V EPAC avec des unités vectorielles atteignant 16 384 bits. L'investissement total européen spécifique à RISC-V dépasse les **500 millions d'euros** en comptant DARE, EPI, EUPILOT, RISER et les projets connexes.
+
+## L'écosystème se structure autour du profil RVA23
+
+Le profil **RVA23**, ratifié en octobre 2024, établit enfin un socle commun pour les processeurs d'application RISC-V. Ce standard impose les extensions vectorielles RVV 1.0, le support hyperviseur, et un ensemble d'instructions garantissant la portabilité logicielle. Ubuntu a annoncé l'abandon du support des CPU non conformes RVA23 à partir d'octobre 2025, créant une pression de standardisation effective.
+
+L'écosystème compte désormais plusieurs acteurs majeurs au-delà de SiFive (plus de 2 milliards de puces expédiées) :
+
+- **Alibaba T-Head** avec la famille Xuantie : plus de 2,5 milliards de cœurs expédiés, cœurs open source (E902, E906, C906, C910), nouveau C930 serveur conforme RVA23
+- **Andes Technology** : plus de 30% du marché IP RISC-V, 17 milliards de SoC expédiés, nouveau cœur Cuzco doublant les performances par cycle
+- **Ventana Micro** (désormais Qualcomm) : cœurs Veyron datacenter en architecture chiplet UCIe
+
+Le consortium **Quintauris** (Bosch, Infineon, Nordic, NXP, Qualcomm, STMicroelectronics) accélère l'adoption automobile avec la plateforme RT-Europa, premier standard RISC-V « gold standard » pour les processeurs temps réel automobiles, disponible depuis janvier 2026.
+
+Les défis persistent néanmoins. L'écosystème logiciel accuse un retard de plusieurs décennies sur ARM et x86, malgré le support Red Hat RHEL (mai 2025), le portage CUDA (juillet 2025), et l'initiative RISE coordonnée par la Linux Foundation avec Google, Intel, NVIDIA, Qualcomm et Samsung. La fragmentation liée aux extensions propriétaires reste un risque, que le profil RVA23 commence à mitiger. La disponibilité de talents RISC-V s'améliore — plus de 60% de la recherche universitaire sur les processeurs porte désormais sur cette architecture.
+
+## Le modèle économique bouleverse l'équilibre x86/ARM
+
+La comparaison des modèles économiques illustre l'avantage structurel de RISC-V. L'ISA x86 reste effectivement fermée, accessible uniquement via les licences croisées Intel-AMD. ARM facture des licences initiales de **1 à 10+ millions de dollars** selon le type de cœur, plus des royalties de 1-2% du prix de la puce ou 0,10-2,00$ par unité. Pour 100 millions de puces avec royalty de 0,50$, cela représente 50 millions de dollars annuels.
+
+RISC-V élimine ces coûts au niveau de l'ISA — licence BSD, 100% libre de royalties. Les fournisseurs d'IP (SiFive, Andes, Tenstorrent) facturent des designs de cœurs optimisés, mais les clients peuvent légalement développer leurs propres implémentations à partir des spécifications publiques. Tenstorrent pousse ce modèle à l'extrême en fournissant le code RTL source et autorisant les modifications internes — une approche impensable avec ARM.
+
+Sur le plan technique, RISC-V compense sa jeunesse par sa simplicité architecturale (47 instructions de base contre 1000+ pour x86) et sa modularité permettant des extensions domaine-spécifiques (cryptographie, AI, automobile). Les performances en calcul intensif rattrapent les architectures établies : les projections situent la parité avec ARM Neoverse V3 fin 2026, tandis que des implémentations spécialisées comme Ascalon-X revendiquent déjà l'équivalence avec Zen 5 en calcul entier.
+
+## Conclusion
+
+Janvier 2026 marque l'entrée de RISC-V dans une nouvelle phase de maturité industrielle. Les 25% de parts de marché dans les nouveaux designs, combinés aux acquisitions multi-milliardaires (Qualcomm/Ventana, Meta/Rivos), au partenariat stratégique SiFive-NVIDIA, et aux investissements souverains européens, confirment que l'architecture ouverte n'est plus un projet académique mais une alternative crédible au duopole établi.
+
+Les tensions géopolitiques accélèrent cette transition : la Chine représente désormais environ 50% des expéditions RISC-V mondiales, utilisant l'architecture pour contourner les contrôles d'exportation américains. L'Europe construit méthodiquement une capacité autonome via DARE et l'EPI. Les hyperscalers américains (Meta, Qualcomm) diversifient leur dépendance à ARM après des années de tensions sur les licences.
+
+Le défi principal reste l'écosystème logiciel. Le portage CUDA, le support RHEL, et le profil RVA23 répondent partiellement à cette lacune, mais des années seront nécessaires avant d'atteindre la maturité d'ARM ou x86. La fragmentation liée aux extensions propriétaires demeure un risque, comme l'illustre l'absence de standard matriciel ratifié malgré trois approches concurrentes.
+
+Pour les acteurs industriels, la question n'est plus de savoir si RISC-V sera pertinent, mais comment et à quelle vitesse l'intégrer dans leurs feuilles de route. La prédiction de Jim Keller — domination des datacenters dans 5-10 ans — peut sembler audacieuse, mais les trajectoires actuelles la rendent plausible pour certains segments (AI inference, edge computing, automobile) bien avant cette échéance.
