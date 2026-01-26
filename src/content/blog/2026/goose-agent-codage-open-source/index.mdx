@@ -1,0 +1,227 @@
+---
+title: "Goose : l'agent de codage open-source qui défie les géants propriétaires"
+description: "Goose, développé par Block, s'impose comme l'alternative open-source aux agents IA propriétaires. Architecture MCP native, 25+ providers LLM."
+date: 2026-01-26
+categories: ["IA", "Open Source"]
+tags: ["goose", "block", "mcp", "agents-ia", "open-source"]
+author: admin
+draft: false
+featured: false
+---
+
+**L'essentiel en bref** : Goose, développé par Block et lancé publiquement en janvier 2025, s'impose comme l'alternative open-source la plus crédible aux agents de codage propriétaires. Utilisé par **60% des 10 000 employés de Block** avec des gains de productivité de **50-75%**, cet agent IA local-first offre une flexibilité unique : support de 25+ providers LLM, architecture MCP native, et workflows reproductibles via son système de "Recipes". En décembre 2025, sa contribution à l'**Agentic AI Foundation** (Linux Foundation) aux côtés d'Anthropic et OpenAI consacre son statut de standard émergent.
+
+---
+
+## De l'outil interne à la fondation Linux : genèse d'un projet stratégique
+
+Goose est né d'un besoin concret identifié par **Bradley Axen**, ingénieur machine learning principal chez Block. « Goose a commencé comme un simple outil pour aider mon équipe à mieux coder. C'était une boucle de feedback basique », explique-t-il. La problématique : les développeurs passaient trop de temps sur des tâches répétitives — configuration d'environnements, migrations de code, maintenance — au détriment du travail à haute valeur ajoutée.
+
+L'évolution décisive survient lorsque les ingénieurs Block veulent connecter Goose à leurs systèmes internes. Chaque intégration nécessitait un développement sur mesure. C'est alors qu'Anthropic leur présente une version précoce du **Model Context Protocol (MCP)** — avant son lancement public de novembre 2024. Block reconstruit entièrement Goose comme client MCP, faisant de l'outil un des premiers adopteurs de ce protocole ouvert.
+
+Le **28 janvier 2025** marque le lancement public sous licence Apache 2.0. La philosophie est claire : « L'écosystème innove plus vite que le développement propriétaire », justifie Dhanji Prasanna, CTO de Block. En décembre 2025, Block franchit une étape majeure en contribuant Goose à l'**Agentic AI Foundation (AAIF)**, une fondation sous Linux Foundation co-créée avec Anthropic et OpenAI. Cette gouvernance neutre garantit la pérennité du projet au-delà des intérêts d'un seul acteur.
+
+---
+
+## Architecture technique : Rust, MCP et multi-provider au cœur du système
+
+Goose repose sur une architecture moderne articulée autour de **trois piliers techniques** qui le différencient fondamentalement des solutions propriétaires.
+
+Le backend est écrit en **Rust** (59,2% du code), organisé en workspace avec plusieurs crates spécialisées : `goose` (logique core), `goose-cli` (interface ligne de commande), `goose-server` (backend desktop appelé "goosed"), et `goose-mcp` (implémentations des serveurs MCP). Le frontend desktop utilise **Electron + TypeScript** (33,9% du code). Cette architecture permet trois modes d'exécution : CLI pour les développeurs terminal-first, application Desktop pour une expérience graphique, et mode headless pour l'automatisation via Recipes.
+
+Le **support multi-provider** constitue un différenciateur majeur. Goose supporte plus de **25 providers LLM** répartis en catégories :
+
+- **APIs cloud** : Anthropic (Claude), OpenAI, Google Gemini, xAI (Grok), Mistral AI, Groq
+- **Plateformes enterprise** : Amazon Bedrock, Azure OpenAI, GCP Vertex AI, Databricks, Snowflake Cortex
+- **Providers locaux** : Ollama, Ramalama, Docker Model Runner — pour une exécution **100% hors-ligne**
+- **CLI pass-through** : réutilisation des abonnements existants Claude Code, Codex, Cursor, Gemini CLI
+
+Cette flexibilité permet de changer de modèle en cours de session selon les besoins : un modèle économique pour les tâches simples, un modèle puissant pour les raisonnements complexes.
+
+L'intégration **MCP** est native. Goose agit comme client MCP connecté à des serveurs MCP (appelés "extensions"). Plus de **60 extensions** sont documentées officiellement, et l'écosystème global compte plus de **3 000 serveurs MCP** compatibles. Les catégories couvrent le développement (GitHub, JetBrains, Playwright), les bases de données (MongoDB, Supabase, Neon), la productivité (Asana, Figma), l'automatisation web (Browserbase, Firecrawl), et bien d'autres.
+
+---
+
+## Système de Recipes : la reproductibilité comme avantage compétitif
+
+Les **Recipes** représentent l'innovation différenciante de Goose par rapport aux concurrents. Il s'agit de workflows YAML versionnables qui définissent précisément le comportement de l'agent.
+
+Un Recipe contient les champs obligatoires (`version`, `title`, `description`, `instructions`) et optionnels (`prompt`, `extensions`, `settings`, `retry`, `response`, `parameters`). Les fonctionnalités avancées incluent les paramètres dynamiques (syntaxe `{{ variable_name }}`), les sub-recipes pour orchestrer des workflows complexes, le scheduling via expressions cron, la validation JSON schema pour l'automatisation, et la logique de retry automatique.
+
+Comme l'explique Nick Taylor, développeur et contributeur : « Les Recipes ne concernent pas seulement la productivité personnelle. Il s'agit de transformer les workflows d'agents en connaissance institutionnelle plutôt qu'en savoir non-documenté. » Cette approche permet aux équipes de standardiser leurs pratiques, versionner leurs processus dans Git, et partager des workflows vérifiés.
+
+---
+
+## Adoption massive chez Block : les chiffres qui parlent
+
+L'adoption interne chez Block fournit les données les plus robustes sur l'efficacité de Goose. Les statistiques officielles de fin 2025 indiquent que **60% de la workforce** (environ **6 500 employés sur 10 000+**) utilise Goose hebdomadairement. Les gains mesurés sont significatifs :
+
+- **50-75%** de réduction du temps de développement sur les tâches courantes
+- **8-10 heures économisées par semaine** pour 75% des ingénieurs
+- **90% des lignes de code** de Bradley Axen désormais écrites par Goose
+- Des sprints de 3 semaines complétés en 1 semaine dans certaines équipes
+
+L'adoption dépasse largement l'engineering. **15 profils métiers différents** utilisent Goose : Sales (analyse de milliers de leads en heures vs jours), Design (prototypes fonctionnels depuis Figma), Product, Customer Success, Operations, Marketing, Finance, et assistants exécutifs. Un cas emblématique : les équipes non-techniques peuvent maintenant résoudre leurs problèmes de données via des requêtes SQL en langage naturel.
+
+Les cas d'usage documentés incluent les migrations de code (Ember→React, Ruby→Kotlin, Prefect-1→Prefect-2), l'analyse de logs sur 50 systèmes simultanément pour la gestion d'incidents (potentiellement 100x plus rapide), et la réduction de 75% du temps administratif pour les chefs de projet.
+
+---
+
+## Goose face à la concurrence : positionnement et benchmarks
+
+Goose ne se positionne pas comme concurrent direct de Cursor ou GitHub Copilot, mais comme une **catégorie différente**. Là où Copilot et Cursor excellent dans l'autocomplete inline et l'intégration IDE, Goose se définit comme une « infrastructure pour l'automatisation agentic » — un système de build pour le comportement d'agents.
+
+Sur le **Terminal-Bench** (benchmark d'agents CLI), Goose se classe **4ème**, derrière Warp et Claude Code (3ème), mais devant Codex CLI (19ème). Cette performance honorable pour un projet d'un an témoigne de la maturité technique.
+
+La comparaison économique avec Claude Code est particulièrement révélatrice. VentureBeat titre : « Claude Code coûte jusqu'à 200$ par mois. Goose fait la même chose gratuitement. » Le modèle Goose est BYOK (Bring Your Own Key) : le logiciel est gratuit, seuls les coûts API du provider choisi s'appliquent. Avec Ollama et des modèles locaux (Qwen, Llama, DeepSeek), le coût total est **zéro**.
+
+|Critère|Goose|Claude Code|Cursor|
+|---|---|---|---|
+|**Coût logiciel**|Gratuit|$100-200/mois|$20/mois|
+|**Flexibilité LLM**|25+ providers|Claude uniquement|Limité|
+|**Exécution locale**|Oui (100%)|Non|Non|
+|**Open source**|Oui (Apache 2.0)|Non|Non|
+|**Workflows reproductibles**|Recipes YAML|Non|Non|
+
+---
+
+## Sécurité local-first et souveraineté des données
+
+L'architecture local-first de Goose répond aux exigences des environnements régulés. L'agent s'exécute entièrement sur la machine utilisateur, sans serveur central Block. « Nous n'avons définitivement rien au milieu de l'utilisation de Goose », confirme l'équipe.
+
+Les API keys sont stockées dans le **keychain système** (Keychain macOS, Windows Credential Manager, GNOME Keyring/KDE Wallet Linux). Une alternative moins sécurisée via fichier `secrets.yaml` existe si le keyring est indisponible. Les variables d'environnement sont également supportées.
+
+Block a conduit des **tests red team** internes qui ont identifié des vulnérabilités de prompt injection cachées dans des caractères Unicode invisibles. Les corrections intégrées incluent des warnings avant exécution de Recipes, une détection améliorée de prompt injection, et des tests adversariaux continus.
+
+Pour les entreprises, l'intégration avec des gateways comme **Portkey** ou **Zuplo AI Gateway** permet la gouvernance centralisée : contrôle budgétaire, audit logs, rate limiting, RBAC. Block elle-même, en tant qu'entreprise financière, utilise cette architecture pour garder les données utilisateurs hors d'internet.
+
+---
+
+## Limites et courbe d'apprentissage : ce qu'il faut savoir
+
+Goose présente des limitations qu'il convient d'évaluer avant adoption.
+
+La **courbe d'apprentissage** est plus raide que les solutions propriétaires. L'interface demande de nombreuses autorisations système au démarrage, ce qui peut surprendre. L'UI Desktop, bien qu'améliorée, reste « dans une ligue inférieure » comparée à ChatGPT ou Perplexity selon certains utilisateurs Hacker News.
+
+Goose **n'offre pas d'autocomplete inline** comme Cursor ou Copilot. Pour les tâches simples et rapides, certains développeurs trouvent que « taper la commande prend plus de temps qu'ouvrir le fichier et faire la modification ». L'outil brille sur les tâches complexes et répétitives, moins sur les micro-modifications.
+
+La qualité des résultats **dépend directement du LLM choisi**. Goose fonctionne mieux avec les modèles Claude 4 (outil calling extensif). Avec des modèles locaux moins performants, les résultats peuvent être inégaux.
+
+Côté bugs, des problèmes de crash sur Linux (erreur libssl, corrigé v1.13.2), d'exit codes incorrects, et de rate limits avec certains providers (Google Calendar API, tier gratuit Groq) ont été rapportés. Le projet reste jeune (93 releases en ~1 an), avec une évolution rapide mais parfois instable.
+
+---
+
+## Modèle économique et coûts réels
+
+Goose applique un modèle économique transparent : **logiciel 100% gratuit, coûts API variables selon le provider**.
+
+|Configuration|Coût approximatif|
+|---|---|
+|Goose + Ollama (modèles locaux)|**Gratuit**|
+|Goose + Groq (tier gratuit)|**Gratuit**|
+|Goose + Google Gemini (tier gratuit)|**Gratuit**|
+|Goose + OpenAI GPT-4o|~$0.60/million tokens|
+|Goose + Claude Opus 4|~$7.50/million tokens|
+
+L'export JSON par session inclut les tokens utilisés, le provider, et les timestamps — permettant un **tracking précis des coûts**. La possibilité de switcher de modèle mid-projet optimise le rapport coût/performance : tâches simples sur modèles économiques, raisonnements complexes sur modèles premium.
+
+Comparé à Claude Code ($100-200/mois fixe) ou Cursor Pro ($20/mois), le modèle BYOK de Goose offre une prévisibilité et un contrôle supérieurs pour les équipes avec des usages variables.
+
+---
+
+## Cas d'usage privilégiés : quand adopter Goose ?
+
+Goose s'avère particulièrement adapté dans plusieurs contextes.
+
+**Environnements régulés** (finance, santé, défense) : l'exécution locale avec modèles Ollama garantit que le code ne quitte jamais la machine. Block elle-même, en tant qu'entreprise financière, valide cette architecture pour les données sensibles.
+
+**Équipes distribuées** : les Recipes permettent de standardiser les workflows, les versionner dans Git, et garantir la reproductibilité des processus entre développeurs et sites.
+
+**Automatisation CI/CD** : le mode headless et le scheduling via cron intègrent Goose dans les pipelines DevOps pour des tâches comme la génération de documentation, les migrations automatisées, ou les revues de code.
+
+**Organisations multi-cloud** : la flexibilité 25+ providers évite le vendor lock-in et permet de négocier les meilleurs tarifs selon les charges de travail.
+
+**Projets nécessitant audit** : le code Apache 2.0 permet un audit complet, contrairement aux solutions propriétaires opaques.
+
+---
+
+## Roadmap et évolutions 2025-2026
+
+La roadmap juillet 2025, évaluée en octobre 2025, montre des progrès significatifs mais inégaux. Les objectifs atteints incluent la formalisation du processus de développement, le rafraîchissement UI, et les Recipes universels. Le support complet MCP (elicitation, sampling) reste en cours. Les objectifs "Hosting/Goose Apps" et "Async Goose (containers)" n'ont pas encore démarré.
+
+Les développements récents de 2026 incluent une **application mobile iOS** en App Store, le support de l'**Agent Client Protocol (ACP)** pour la communication client-agent, et des avancées sur les subagents pour l'exécution parallèle de tâches.
+
+La vision long terme de Block, portée par l'AAIF, positionne les agents IA open source comme ayant « un impact rivalisant avec celui d'Internet durant ses années formatrices des années 1990-2000 ». L'objectif 2026 chez Block : économiser 25% des heures manuelles à l'échelle de l'entreprise. Brad Axen annonce que « le multi-agent est absolument ce qui vient ensuite ».
+
+---
+
+## Conclusion : un choix stratégique selon le contexte
+
+Goose représente une alternative crédible et mature aux agents de codage propriétaires, mais pas un remplacement universel. Ses **avantages distinctifs** — flexibilité multi-provider, souveraineté des données, Recipes reproductibles, gouvernance Linux Foundation — en font le choix naturel pour les organisations soucieuses de contrôle, les environnements régulés, et les équipes cherchant à standardiser leurs pratiques agentic.
+
+Ses **limitations** — courbe d'apprentissage, absence d'autocomplete inline, UI moins polie — le rendent moins adapté aux développeurs cherchant une intégration IDE transparente pour des micro-tâches rapides. Pour ces usages, Cursor ou Copilot restent plus appropriés.
+
+Le positionnement de Goose comme « infrastructure pour workflows d'agents » plutôt que comme simple assistant de code reflète une vision où l'automatisation reproductible prime sur l'assistance ponctuelle. Pour les organisations prêtes à investir dans cette courbe d'apprentissage, le retour sur investissement documenté chez Block — **50-75% de gains de productivité** — justifie largement l'effort initial.
+
+**Statistiques clés à retenir** :
+
+- **22k+ stars GitHub**, 325+ contributeurs, 93+ releases
+- **60% des 10 000 employés Block** utilisateurs hebdomadaires
+- **25+ providers LLM** supportés, dont exécution 100% locale
+- **60+ extensions MCP** documentées, 3 000+ dans l'écosystème
+- **Coût logiciel : zéro** (seuls coûts API selon provider choisi)
+
+---
+
+## Sources et références
+
+**Sources officielles Block**
+
+- Block, _Block Open Source Introduces "codename goose" — an Open Framework for AI Agents_, janvier 2025. https://block.xyz/inside/block-open-source-introduces-codename-goose
+- Block, _Accelerating Open Source AI at Block: Introducing the goose grant program_, 2025. https://block.xyz/inside/introducing-the-goose-grant-program
+- Block, _Block, Anthropic, and OpenAI Launch the Agentic AI Foundation_, décembre 2025. https://block.xyz/inside/block-anthropic-and-openai-launch-the-agentic-ai-foundation
+- Block, _Inside Block's 2025 Investor Day: Building for Profitable Growth Through Connected Ecosystems_, 2025. https://block.xyz/inside/inside-blocks-2025-investor-day-building-for-profitable-growth-through-connected-ecosystems
+
+**Documentation technique Goose**
+
+- GitHub, _block/goose: an open source, extensible AI agent that goes beyond code suggestions_. https://github.com/block/goose
+- Goose Documentation, _Configure LLM Provider_. https://block.github.io/goose/docs/getting-started/providers/
+- GitHub, _goose/AGENTS.md at main · block/goose_. https://github.com/block/goose/blob/main/AGENTS.md
+- GitHub, _Releases · block/goose_. https://github.com/block/goose/releases
+- Goose Blog, _goose mobile apps and agent clients_, janvier 2026. https://block.github.io/goose/blog/2026/01/20/goose-mobile-apps/
+
+**Linux Foundation et AAIF**
+
+- Linux Foundation, _Linux Foundation Announces the Formation of the Agentic AI Foundation (AAIF), Anchored by New Project Contributions Including Model Context Protocol (MCP), goose and AGENTS.md_, décembre 2025. https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation
+- TechCrunch, _OpenAI, Anthropic, and Block join new Linux Foundation effort to standardize the AI agent era_, décembre 2025. https://techcrunch.com/2025/12/09/openai-anthropic-and-block-join-new-linux-foundation-effort-to-standardize-the-ai-agent-era/
+
+**Analyses et retours d'expérience**
+
+- Anthropic, _Customer story | Block | Claude_. https://claude.com/customers/block
+- Aviator, _How Block Deployed AI Agents at Scale with Goose & MCP_. https://www.aviator.co/podcast/block--ai-agents-goose
+- DEV Community, _MCP in the Enterprise: Real World Adoption at Block_, 2025. https://dev.to/goose_oss/mcp-in-the-enterprise-real-world-adoption-at-block-ci5
+- Lenny's Newsletter, _How Block is becoming the most AI-native enterprise in the world | Dhanji R. Prasanna_. https://www.lennysnewsletter.com/p/how-block-is-becoming-the-most-ai-native
+- Databricks, _Meet Goose, an Open Source AI Agent_, Data + AI Summit 2025. https://www.databricks.com/dataaisummit/session/meet-goose-open-source-ai-agent
+
+**Comparatifs et benchmarks**
+
+- Nick Taylor, _What Makes Goose Different From Other AI Coding Agents_, DEV Community / Nickyt.co. https://dev.to/nickytonline/what-makes-goose-different-from-other-ai-coding-agents-2edc
+- Marc Nuri, _Introducing Goose, the on-machine AI agent_. https://blog.marcnuri.com/goose-on-machine-ai-agent-cli-introduction
+- Tessl, _Choosing your next CLI: Codex, Claude, Warp, Goose, or Gemini?_. https://tessl.io/blog/choosing-the-right-ai-cli/
+- Tyler Folkman (Substack), _Goose vs Claude Code vs Cursor: The AI coding tool that lets you switch models mid-project_. https://tylerfolkman.substack.com/p/goose-vs-claude-code-vs-cursor-which
+- Qodo, _Claude Code Alternatives: 3 CLI Tools That Won't Burn Your API Credits_. https://www.qodo.ai/blog/claude-code-alternatives/
+
+**Presse tech**
+
+- VentureBeat, _Jack Dorsey is back with Goose, a new, ultra-simple open-source AI agent-building platform from his startup Block_, janvier 2025. https://venturebeat.com/programming-development/jack-dorsey-is-back-with-goose-a-new-ultra-simple-open-source-ai-agent-building-platform-from-his-startup-block
+- VentureBeat, _Enterprise leaders say recipe for AI agents is matching them to existing processes — not the other way around_. https://venturebeat.com/ai/enterprise-leaders-say-recipe-for-ai-agents-is-matching-them-to-existing-processes-not-the-other-way-around
+- The Register, _Block red-teamed its own AI agent to run an infostealer_, janvier 2026. https://www.theregister.com/2026/01/12/block_ai_agent_goose/
+- CO/AI, _Jack Dorsey's Goose AI assistant gains rapid adoption beyond coding tasks_. https://getcoai.com/news/jack-dorseys-goose-ai-assistant-gains-rapid-adoption-beyond-coding-tasks/
+
+**Analyses communautaires**
+
+- Medium (Raghav Sriram), _Startup's Golden Goose: How Block AI's New Goose Framework Lets Small AI Companies Compete with Industry Goliaths_. https://medium.com/@raghavsriram/startups-golden-goose-how-block-ai-s-new-goose-framework-lets-small-ai-companies-compete-with-35779e926920
+- Medium (Bytes & Being), _Goose on the Loose: Block's AI Agent Takes Flight in the Developer World_. https://medium.com/bytes-being/goose-on-the-loose-blocks-ai-agent-takes-flight-in-the-developer-world-c82414e6a71f
+- Medium (Onion Creative), _Why Goose is the AI Coding Agent That Finally Won Us Over_. https://medium.com/onion-creative/why-goose-is-the-ai-coding-agent-that-finally-won-us-over-8835c662d152
+- Pynomial, _Unpacking Block's Goose AI Framework: A New Era for AI Agents_, février 2025. https://pynomial.com/2025/02/unpacking-blocks-goose-ai-framework-a-new-era-for-ai-agents/
+- Zuplo, _AI Week: Using AI Gateway with goose AI agent_. https://zuplo.com/blog/ai-gateway-with-goose
