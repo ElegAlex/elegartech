@@ -1,0 +1,172 @@
+---
+title: "Zun et Magnum face à Docker/K8s : le détour vaut-il vraiment le coup ?"
+description: "Analyse comparative des services containers OpenStack (Zun/Magnum) face à Docker et Kubernetes. Verdicts terrain et framework de décision pour architectes."
+date: 2026-01-31
+categories: ["Systèmes", "Analyses"]
+tags: ["OpenStack", "Kubernetes", "Docker", "Conteneurs", "Infrastructure"]
+author: admin
+draft: false
+featured: false
+---
+
+**Verdict direct : Non, sauf si vous avez déjà OpenStack.** Les services containers d'OpenStack (Zun et Magnum) apportent une multi-tenancy native et une intégration infrastructure remarquable, mais leur complexité, leurs communautés réduites, et le coût d'entrée d'une stack OpenStack complète les rendent injustifiables pour quiconque n'exploite pas déjà OpenStack pour ses VMs. Pour 95% des cas d'usage, K8s vanilla, k3s ou Nomad seront plus pragmatiques.
+
+Ce constat repose sur l'analyse des témoignages terrain, de l'état réel des projets en 2025, et des seuils de rentabilité quantifiés. Cet article décortique les arbitrages techniques pour aider un architecte à trancher entre ces deux mondes.
+
+---
+
+## Ce que Zun apporte réellement (et ses limites critiques)
+
+Zun, lancé en 2016, propose un modèle **Containers-as-a-Service** comparable à AWS Fargate : exécuter des conteneurs sans gérer de cluster Kubernetes. Les conteneurs deviennent des ressources OpenStack natives, bénéficiant automatiquement de l'authentification Keystone, du réseau Neutron, et des volumes Cinder.
+
+L'intégration Neutron/Cinder représente le principal argument technique. Via **Kuryr-libnetwork**, chaque conteneur obtient une IP du pool Neutron avec security groups, floating IPs et isolation VXLAN/VLAN enterprise — impossible à répliquer simplement avec Docker standalone. Les volumes Cinder apportent persistance répliquée, snapshots et chiffrement natif, là où Docker se limite aux volumes locaux.
+
+|Fonctionnalité|Docker standalone|Zun + OpenStack|
+|---|---|---|
+|Réseaux multi-tenant|Bridge partagé|Isolation native Neutron|
+|Volumes persistants|Filesystem local|Cinder avec réplication|
+|Authentification|Aucune centralisée|Keystone RBAC|
+|Quotas ressources|Non|Par projet OpenStack|
+
+**Cependant, l'état de la communauté Zun pose un problème majeur.** Le projet compte **3 042 commits** et **101 contributeurs** au total, mais l'activité récente se limite à **10-20 commits par an** avec seulement **1 à 5 contributeurs actifs**. Les releases suivent le cycle OpenStack (tous les 6 mois), mais les évolutions sont minimales : corrections de compatibilité Python 3.12, fixes pour les nouvelles versions Docker. Aucune nouvelle fonctionnalité majeure depuis 2020.
+
+La contrainte technique la plus handicapante : **Kuryr-libnetwork ne supporte pas Docker 23+** suite à la suppression de l'option `--cluster-store`. Toute installation Zun nécessite de _pinner_ Docker en version 20.x, rendant impossible l'utilisation des fonctionnalités récentes.
+
+**Zun fait sens si** vous avez déjà OpenStack et souhaitez exposer des conteneurs comme ressources cloud natives, avec multi-tenancy stricte et intégration Heat pour orchestrer VMs et conteneurs ensemble. **Zun est overkill** pour du développement, du CI/CD, ou toute organisation sans OpenStack existant — un déploiement Zun minimal nécessite **6 services OpenStack** (Keystone, Neutron, MariaDB, RabbitMQ, Memcached, Kuryr, etcd) contre **5 minutes** pour installer Docker.
+
+---
+
+## Magnum vs Kubernetes auto-hébergé : ce qu'on gagne vraiment
+
+Magnum n'est pas une distribution Kubernetes modifiée mais une **couche de provisioning automatisé** utilisant Heat pour déployer des clusters K8s complets sur l'infrastructure OpenStack. Chaque cluster créé obtient automatiquement son réseau privé Neutron, ses load balancers Octavia pour l'API multi-master, et l'intégration cloud-provider-openstack pour les PersistentVolumes Cinder.
+
+### La multi-tenancy : avantage décisif ou surengineering ?
+
+Kubernetes est **mono-tenant par design**. Implémenter une isolation sérieuse en vanilla K8s exige de configurer manuellement RBAC granulaire, NetworkPolicies, ResourceQuotas, PodSecurityStandards, voire des outils comme Loft ou vCluster. Magnum court-circuite tout cela : chaque cluster K8s obtient son **propre réseau privé Neutron** avec isolation au niveau hyperviseur. Les conteneurs d'un tenant ne peuvent physiquement pas communiquer avec ceux d'un autre.
+
+|Critère|Magnum|K8s vanilla|
+|---|---|---|
+|Isolation réseau|Native (Neutron)|NetworkPolicies à configurer|
+|Isolation compute|VMs séparées|Pods partagent le kernel|
+|Configuration|Automatique|100+ objets à créer|
+|Temps mise en œuvre|Minutes|Jours/semaines|
+
+Cette multi-tenancy "hardware-level" justifie à elle seule Magnum pour un cloud provider interne servant des équipes cloisonnées.
+
+### Le retard de versions : un vrai frein
+
+La version Dalmatian (octobre 2024) de Magnum embarque Kubernetes **v1.28.9**, alors que l'upstream atteint v1.31-1.32. Le **retard de 2 à 4 versions** (~6-12 mois) provient de la dépendance aux images Hyperkube (officielles discontinuées après v1.18, nécessitant docker.io/rancher/) et aux tests d'intégration avec cloud-provider-openstack.
+
+Le paramètre `kube_tag` permet techniquement d'utiliser des versions plus récentes, mais **sans garantie de fonctionnement** ni support officiel.
+
+---
+
+## Le cas CERN : pourquoi ça marche pour eux
+
+Le CERN exploite Magnum sur une infrastructure de **300 000 cœurs CPU**, **9 000 hyperviseurs**, et **plus de 400 clusters Kubernetes** en production. Leur choix s'explique par trois facteurs impossibles à répliquer ailleurs :
+
+**L'agnosticisme COE initial.** En 2016, le CERN devait supporter Docker Swarm, Kubernetes ET Mesos selon les préférences des équipes de physiciens. Magnum permettait ce choix sans multiplier les outils de provisioning.
+
+**L'échelle et la multi-tenancy.** Avec 13 000 physiciens comme utilisateurs potentiels, l'isolation par projet Keystone était indispensable. Chaque groupe peut créer ses clusters K8s en self-service sans comprendre l'infrastructure sous-jacente.
+
+**L'intégration stockage HEP.** Les workflows de physique des particules nécessitent l'accès à EOS (système de fichiers distribué CERN) et CephFS via Manila — des intégrations développées en interne et contribuées upstream.
+
+_"We had groups of people who were pushing for Kubernetes; we had groups of people who were already using Mesos; and others who were just using plain Docker"_ — **Ricardo Rocha, CERN**
+
+**Le CERN dispose aussi d'une équipe dédiée** incluant Spyros Trigazis (PTL Magnum depuis Pike) et Belmiro Moreira (10+ ans d'architecture OpenStack), avec plus de 1 000 commits OpenStack depuis 2011. Cette expertise n'existe pas dans une organisation typique.
+
+---
+
+## Témoignages terrain : la réalité opérationnelle
+
+Les retours d'expérience collectés sur Reddit, HackerNews et blogs techniques convergent vers un constat peu flatteur pour Magnum et Zun.
+
+**Gcore (Head of PaaS Services, Andrei Novoselov)**, qui opère Magnum en production : _"It's as simple as riding a bike to operate Magnum in production, but it's like we're on fire, and everything around us is too, and we are in hell. If RabbitMQ goes down, Heat might not be able to handle it. The Heat stacks would crash, and there's no CLI way to get them up and running again."_ Leur temps de spin-up cluster : **20 minutes en moyenne**, avec une fragilité notable lors des incidents infrastructure.
+
+**Un opérateur de 3 500+ VMs (jetbalsa, HackerNews)** : _"What people mean when it's 'consulting-ware' is that there are no real documentation on the failure states, tunables, and intermixed services. [...] An 8 Node support contract from RedHat was north of 80k/yr on top of telling me that Openstack is dead, have you tried Openshift."_
+
+**JD.com (Fortune 500)** a migré intégralement d'OpenStack+Docker (JDOS 1.0) vers Kubernetes pur (JDOS 2.0), témoignant d'une tendance générale où les grandes organisations abandonnent les services containers OpenStack au profit de K8s vanilla déployé sur l'infrastructure VM.
+
+À l'inverse, **les témoignages positifs viennent d'organisations avec OpenStack déjà mature** : _"Once up and running, however, it is awesome"_ (BirAdam). Le point commun : une équipe experte et un investissement long terme.
+
+---
+
+## Framework de décision : les seuils quantifiés
+
+### Coûts opérationnels OpenStack
+
+|Métrique|Valeur|
+|---|---|
+|Équipe minimum viable|**2 FTE** (couverture 24/7)|
+|Ratio admin/serveurs|1 admin pour ~50 serveurs|
+|Support Canonical avancé|**$1 500/serveur/an**|
+|Consulting déploiement|**$75 000 - $150 000**|
+|Seuil rentabilité vs cloud public|**>400 VMs**|
+
+### Disponibilité des compétences
+
+Le marché de l'emploi reflète la réalité : Kubernetes apparaît dans **100% des offres DevOps/Cloud**, contre **8% pour OpenStack**. Recruter un expert OpenStack coûte un **premium de 15-25%** par rapport à un profil K8s équivalent, avec un pool de candidats bien plus restreint.
+
+### Arbres de décision par scénario
+
+**PME/Startup (5-20 serveurs)** : ⛔ OpenStack = overkill absolu. Les **2 FTE minimum** et le **consulting à $75K+** sont injustifiables. Solutions recommandées : k3s (production légère), Docker Compose + Podman (applications simples), ou managed K8s si budget cloud disponible.
+
+**Enterprise avec OpenStack existant** : ✅ Magnum fait sens pour le provisioning K8s self-service avec synergies Keystone/Neutron/Cinder. Alternative viable : déployer K8s via Terraform sur VMs Nova, évitant la couche Magnum/Heat mais perdant l'automatisation.
+
+**Greenfield enterprise sans OpenStack** : 🔄 Recommander OpenStack+Magnum uniquement si : infrastructure >400 VMs prévue, workloads mixtes VMs + containers obligatoires, souveraineté données absolue, équipe ops de 3-5 FTE, et horizon >5 ans. Sinon, Rancher, OpenShift ou managed K8s seront plus pragmatiques.
+
+---
+
+## Les alternatives qui simplifient l'équation
+
+**k3s** représente l'antithèse de Magnum : binaire unique <70MB, installation en une commande, 512MB RAM minimum. Certifié CNCF, il offre une compatibilité totale avec l'écosystème Kubernetes sans la complexité. Parfait pour PME, edge, IoT.
+
+**HashiCorp Nomad** occupe une niche intéressante : orchestration multi-workload (containers, VMs, jobs batch, applications Java) via un binaire unique. Cloudflare l'utilise pour son edge computing. Si vous êtes déjà dans l'écosystème HashiCorp (Terraform, Vault, Consul), Nomad s'intègre naturellement.
+
+**Docker Swarm** reste maintenu par Mirantis avec engagement de support 3+ ans. Clients notables : MetLife, Royal Bank of Canada, S&P Global. Adapté aux équipes Docker existantes refusant la courbe d'apprentissage K8s, mais l'innovation a cessé.
+
+**Podman + systemd** (via Quadlets depuis Podman 4.4) permet une orchestration légère sans démon : fichiers unit systemd déclaratifs, mode rootless natif, intégration journalctl. Idéal pour machines uniques ou environnements edge sans K8s.
+
+---
+
+## Kata Containers : avec ou sans OpenStack ?
+
+Kata Containers fonctionne **totalement indépendamment d'OpenStack**. Ce runtime OCI créant des micro-VMs isolées s'intègre avec Docker, containerd, CRI-O et Kubernetes via CRI standard. Son hébergement par l'Open Infrastructure Foundation (ex-OpenStack Foundation) n'implique aucune dépendance technique.
+
+|Aspect|Kata + OpenStack|Kata + K8s vanilla|
+|---|---|---|
+|Complexité|Élevée (stack OS entière)|Modérée|
+|Networking|Neutron-managed|CNI plugins|
+|Adoption|Télécoms, grandes entreprises|Hyperscalers, startups|
+
+L'intégration OpenStack apporte le réseau Neutron et les volumes Cinder pour les containers Kata, mais **la majorité des déploiements Kata se font sur K8s vanilla** — Baidu, Ant Group, OVHcloud n'utilisent pas OpenStack pour leurs workloads Kata.
+
+---
+
+## L'ironie Kolla : quand Kubernetes orchestre OpenStack
+
+**Kolla-Ansible** déploie tous les services OpenStack dans des conteneurs Docker, transformant l'installation en playbooks Ansible reproductibles. Mais le projet **OpenStack-Helm** va plus loin : déployer OpenStack _sur_ Kubernetes via Helm charts.
+
+```
+Scénario traditionnel :
+  Bare-Metal → OpenStack → VMs → K8s → Applications
+
+Scénario OpenStack-Helm :
+  Bare-Metal → Kubernetes → OpenStack (pods K8s) → VMs → ...K8s nested ?
+```
+
+La question "qui orchestre qui ?" devient philosophique. **Airship**, utilisé par AT&T, pousse cette logique : Kubernetes orchestre le lifecycle complet d'OpenStack, incluant le bare-metal provisioning. L'ironie ultime : OpenStack devient un workload Kubernetes comme un autre.
+
+Cette architecture fait sens pour les opérateurs télécom souhaitant unifier leur tooling autour des patterns cloud-native (GitOps, opérateurs K8s, HPA) tout en conservant l'IaaS OpenStack pour les workloads legacy.
+
+---
+
+## Conclusion : les verdicts pragmatiques
+
+**"Si tu n'as pas OpenStack, ne l'installe pas juste pour Zun/Magnum"** se confirme comme le conseil le plus sage. Le coût d'entrée (équipe, consulting, maintenance) dépasse systématiquement les bénéfices pour une organisation démarrant de zéro avec uniquement des besoins containers.
+
+**"Si tu as déjà OpenStack, Magnum peut simplifier le provisioning K8s"** reste vrai, avec la nuance que déployer K8s via Terraform sur VMs Nova évite la couche Heat/Magnum tout en conservant les synergies réseau/stockage.
+
+**"Zun = projet de niche avec communauté quasi-morte, à éviter pour du neuf"** se vérifie : 10-20 commits/an, incompatibilité Docker 23+, aucune adoption visible en production récente.
+
+**Le vrai arbitrage** pour un architecte en 2026 : acceptez que Kubernetes a gagné la guerre de l'orchestration containers. OpenStack reste pertinent comme IaaS pour VMs et bare-metal, mais ses services containers (Zun, Magnum) ciblent un segment de marché très spécifique — cloud providers internes, télécoms, institutions de recherche avec équipes OpenStack matures et besoins de multi-tenancy hardware-level. Pour tous les autres cas, k3s, Rancher, Nomad ou managed K8s offriront un meilleur retour sur investissement.
