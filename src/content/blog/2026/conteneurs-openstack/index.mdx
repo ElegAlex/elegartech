@@ -1,0 +1,114 @@
+---
+title: "Conteneurs dans OpenStack : Magnum prospère, Zun s'éteint, Kubernetes règne"
+description: "Magnum orchestre 250+ clusters Kubernetes au CERN tandis que Zun stagne. Le standard LOKI domine avec 85% des déploiements OpenStack."
+date: 2026-01-31
+categories: ["Systèmes", "Open Source"]
+tags: ["openstack", "kubernetes", "magnum", "conteneurs", "cloud"]
+author: admin
+draft: false
+featured: false
+---
+
+**En janvier 2026, l'écosystème des conteneurs OpenStack se polarise radicalement** : Magnum émerge comme solution mature pour orchestrer Kubernetes à grande échelle (le CERN gère **250+ clusters** via ce service), tandis que Zun stagne avec une poignée de commits annuels et aucun déploiement production documenté. Cette divergence reflète une réalité plus large : **85% des déploiements OpenStack intègrent désormais Kubernetes**, consacrant le standard "LOKI" (Linux-OpenStack-Kubernetes-Infrastructure). Pour les architectes cloud, le choix se précise : Magnum pour la multi-tenancy native et l'intégration OpenStack, Kubernetes vanilla pour la simplicité, et Zun uniquement pour des cas de niche très spécifiques.
+
+---
+
+## Magnum devient le pilier de l'orchestration Kubernetes sur OpenStack
+
+Magnum a considérablement évolué entre 2024 et 2026, abandonnant les technologies obsolètes pour se concentrer exclusivement sur Kubernetes. La release **2024.1 (Caracal)** a marqué un tournant décisif avec la suppression du support Docker Swarm et la dépréciation du driver Heat au profit de **Cluster API (CAPI)**. Le nouveau driver recommandé, **magnum-capi-helm**, permet désormais de créer des clusters en moins de **5 minutes** contre plusieurs dizaines auparavant.
+
+L'architecture actuelle repose sur deux composants principaux : **magnum-api** (serveur REST scalable horizontalement) et **magnum-conductor** (processus de traitement AMQP). L'intégration avec les services OpenStack reste le différenciateur clé : Nova pour le provisionnement des instances, Neutron pour l'isolation réseau par cluster, Cinder pour les volumes persistants via CSI, Octavia pour les LoadBalancers Kubernetes automatiques, et Barbican pour la gestion des certificats TLS.
+
+La version **2025.1 (Epoxy)** apporte le redimensionnement des nœuds control plane et corrige les problèmes de floating IP. La dernière release **2025.2 (Flamingo)** supporte Kubernetes **v1.28** — un retard assumé de quelques versions par rapport à l'upstream, compensé par la stabilité et l'intégration native. Les commits récents (6 janvier 2026) montrent une maintenance active, bien que concentrée sur quelques contributeurs dont Tim Bell du CERN, membre de l'équipe core.
+
+### Le CERN valide Magnum à l'échelle du pétaoctet
+
+Le cas du CERN constitue la référence incontournable pour Magnum en production. L'organisation européenne de recherche nucléaire gère une infrastructure OpenStack de **300 000 cores** répartis sur 80 cells, avec **250+ clusters Kubernetes** orchestrés via Magnum. Cette architecture supporte des workloads critiques : la plateforme REANA pour les workflows réutilisables en physique des hautes énergies, Spark as a Service pour l'analyse de données, et les simulations de détecteurs LHC à grande échelle.
+
+L'architecture CERN utilise 240 hyperviseurs (32 cores, 64 GB RAM chacun) avec stockage Ceph et réseau flat 10Gb. Trois nœuds contrôleurs dédiés gèrent Magnum et Heat, trois autres RabbitMQ. Le CERN a également développé le cluster autoscaler pour Magnum et contribue activement via l'OpenStack Scientific SIG. Cette implémentation prouve que Magnum peut gérer des workloads de production exigeants tout en maintenant l'isolation multi-tenant native d'OpenStack.
+
+### Quand Magnum surpasse un déploiement Kubernetes direct
+
+|Critère|Avantage Magnum|Limitation|
+|---|---|---|
+|Multi-tenancy|Isolation native par projet OpenStack, réseau privé par cluster|Complexité initiale si OpenStack n'existe pas|
+|Intégration storage|CSI Cinder automatique, persistent volumes natifs|Versions CSI parfois en retard|
+|LoadBalancing|type=LoadBalancer provisionne Octavia automatiquement|Nécessite setup préalable d'Octavia|
+|Lifecycle management|API unifiée création/scaling/suppression|Upgrades clusters Heat supprimés (migration CAPI requise)|
+|Self-service|Utilisateurs créent leurs clusters sans admin|Documentation parfois désynchronisée|
+
+**Magnum fait sens** pour les organisations disposant déjà d'OpenStack, nécessitant une isolation multi-tenant forte, ou souhaitant offrir du Kubernetes-as-a-Service à leurs équipes internes. **Il est déconseillé** pour les déploiements standalone sans OpenStack existant, ou lorsque les dernières versions Kubernetes sont impératives.
+
+---
+
+## Zun : un projet fonctionnel mais en déclin inexorable
+
+Zun incarne le concept séduisant du "Nova des conteneurs" — gérer des conteneurs unitaires comme des ressources OpenStack natives, avec intégration Neutron pour le réseau et Cinder pour le stockage. En pratique, le projet n'a jamais trouvé son marché. Les statistiques GitHub révèlent une réalité préoccupante : **3 042 commits totaux**, mais seulement **10-15 commits par an** depuis 2023, principalement de la maintenance automatisée et des corrections mineures.
+
+Un seul contributeur actif, **hongbin** (Huawei), maintient le projet à bout de bras. Les releases continuent au rythme OpenStack standard (Zun 16.0.0 pour Flamingo 2025.2), mais sans nouvelles fonctionnalités significatives depuis l'introduction du plugin CNI en 2022. Plus problématique encore : **aucun déploiement production majeur n'est publiquement documenté**, contrairement à Magnum.
+
+Les causes de ce déclin sont multiples. Kubernetes a "gagné la bataille" de l'orchestration conteneurs — la plupart des workloads conteneurisés nécessitent scaling automatique, service discovery et rolling updates, fonctionnalités absentes de Zun. Le cas d'usage "conteneurs individuels intégrés OpenStack sans orchestration" s'avère trop étroit. Pire, des problèmes techniques persistent : l'incompatibilité avec Docker 23+ (Kuryr-libnetwork nécessite Docker 20.x) freine toute adoption moderne.
+
+**Recommandation claire** : éviter Zun pour tout nouveau déploiement. Pour des conteneurs simples sur OpenStack, Docker ou Podman sur VMs Nova suffisent. Pour l'orchestration, Magnum avec Kubernetes répond à tous les besoins. Zun ne trouve sa place que dans des environnements OpenStack très spécifiques nécessitant une intégration Neutron/Keystone pour des conteneurs unitaires — un cas d'usage rarissime.
+
+---
+
+## Kata Containers apporte l'isolation VM aux workloads conteneurisés
+
+Kata Containers représente l'approche inverse de Zun : plutôt que d'intégrer des conteneurs dans OpenStack, il apporte l'isolation des machines virtuelles aux conteneurs standard. Chaque conteneur (ou pod Kubernetes) s'exécute avec son propre **kernel dédié** dans une VM légère, combinant la vitesse des conteneurs avec la sécurité de la virtualisation matérielle.
+
+Le projet, gouverné par l'OpenInfra Foundation, affiche une santé exemplaire : **releases mensuelles** (version 3.26.0 en janvier 2026), **7 100+ stars GitHub**, et contributions actives d'Intel, IBM, Red Hat, AMD, NVIDIA et Alibaba. La migration vers **Rust** (runtime-rs) progresse, avec pour objectif de devenir le runtime par défaut dans la version 4.0.
+
+Les performances ont considérablement progressé. Avec **Cloud Hypervisor** ou **Firecracker** comme hyperviseur, le temps de démarrage atteint **100-200ms** — comparable aux conteneurs natifs runC. L'overhead mémoire reste modéré (**10-30 MB** par pod) grâce à KSM et au templating de VMs. Le passage de virtio-9p à **virtio-fs** a multiplié par 2 à 8 les performances I/O.
+
+L'adoption production est significative : **Baidu** utilise Kata pour son Function Computing et son AI Cloud, **Alibaba/Ant Group** pour sa plateforme de paiement exigeant une isolation performance, **Huawei** pour ses services Cloud Container Instance, et **Northflank** pour plus de 2 millions de workloads mensuels multi-tenant. L'intégration avec OpenStack Zun fonctionne via configuration du runtime, et Kata peut servir de runtime pour les pods Kubernetes déployés via Magnum, ajoutant une couche d'isolation pour les workloads sensibles.
+
+---
+
+## Kolla-Ansible domine le déploiement OpenStack conteneurisé
+
+L'ironie ultime de l'écosystème : OpenStack lui-même tourne désormais majoritairement dans des conteneurs. **Kolla** fournit les images Docker/Podman pour tous les services OpenStack, tandis que **Kolla-Ansible** automatise leur déploiement via playbooks Ansible. Cette approche offre des avantages opérationnels considérables :
+
+- **Upgrades simplifiés** : les conteneurs sont recréés à partir de nouvelles images, avec migrations de schéma DB automatiques et possibilité de rollback rapide
+- **Isolation des services** : chaque processus OpenStack dans son conteneur, réduisant les conflits de dépendances
+- **Reproductibilité** : images pré-buildées sur Quay.io ou build personnalisé avec patches spécifiques
+- **Déploiement rapide** : environ 5-30 minutes pour un environnement complet
+
+Le projet reste très actif avec **15 197+ commits** sur Kolla-Ansible et des releases alignées sur chaque cycle OpenStack. La version 2025.2 introduit le remplacement de Redis par **Valkey**, uWSGI par défaut pour les API, et les **Neutron agent wrappers** qui permettent de redémarrer les agents sans impacter le dataplane. Le support **Podman** mature progressivement, avec socket activation activée par défaut.
+
+### OpenStack sur Kubernetes : la convergence LOKI
+
+La tendance la plus significative reste la possibilité de déployer OpenStack lui-même sur Kubernetes via **OpenStack-Helm** ou **Airship**. Cette architecture "double couche" permet d'uniformiser les outils d'opération (Helm, kubectl, GitOps) tout en bénéficiant du self-healing Kubernetes. Les combinaisons testées incluent OpenStack 2025.1 sur Kubernetes 1.29-1.31.
+
+**Airship**, projet top-level OpenInfra, va plus loin en gérant le cycle de vie complet depuis le bare metal via des documents YAML déclaratifs. AT&T et Charter Communications l'utilisent en production. Cette approche trouve sa pertinence principalement dans les télécoms (NFV/5G) et l'edge computing, où l'uniformisation des opérations justifie la complexité ajoutée.
+
+|Solution déploiement|Usage recommandé|Complexité|
+|---|---|---|
+|**Kolla-Ansible**|Production PME/enterprise, équipes DevOps|Moyenne|
+|**OpenStack-Helm**|Environnements Kubernetes-natifs, télécoms|Élevée|
+|**Kayobe**|Bare metal datacenter|Moyenne|
+|**DevStack**|Développement uniquement (non-persistant)|Faible|
+
+---
+
+## Le marché consacre le standard LOKI et la fuite VMware
+
+Les chiffres 2025 confirment la résilience d'OpenStack : **plus de 55 millions de cores** en production globalement, une croissance de 350% depuis 2018. Le marché des services OpenStack est estimé entre 9 et 30 milliards USD en 2024, avec des projections de croissance annuelle de 21-32%. Les télécoms représentent 27,9% du marché, portés par les déploiements NFV et 5G.
+
+L'intégration Kubernetes atteint des niveaux record : **85%+ des déploiements OpenStack** incluent Kubernetes, dont 73% en version vanilla et 12% via OpenShift. **Magnum atteint 21% d'adoption production** (vs 16% en 2021), tandis que les utilisateurs Kubernetes sur OpenStack adoptent davantage Ironic (37%), Kolla, Manila et Kuryr. Cette convergence a donné naissance au standard "LOKI" promu par l'OpenInfra Foundation.
+
+Le phénomène majeur de 2024-2025 reste la **migration VMware vers OpenStack**, catalysée par l'acquisition Broadcom. Les augmentations de prix drastiques (48% des clients paient plus cher, 30% ont vu leurs coûts quadrupler, 15% multipliés par 10) poussent les organisations vers des alternatives. Gartner prévoit que plus d'un tiers des workloads VMware migreront d'ici 2028. Des outils comme **MigrateKit** (VEXXHOST, open source) facilitent ces migrations avec near-zero downtime, et Canonical annonce jusqu'à 40% d'économies.
+
+---
+
+## Verdict : Magnum pour l'intégration, Kubernetes direct pour la simplicité
+
+Pour les architectes cloud en 2026, les recommandations se clarifient. **Magnum fait sens** dans trois scenarios : infrastructure OpenStack existante nécessitant des clusters Kubernetes isolés par tenant, besoin d'intégration native avec Cinder/Neutron/Octavia, ou offre Kubernetes-as-a-Service interne. Le nouveau driver CAPI-Helm améliore significativement l'expérience de création de clusters.
+
+**Kubernetes direct** (avec Cloud Provider OpenStack pour l'intégration) convient mieux lorsque l'équipe maîtrise Kubernetes mais pas OpenStack, lorsque les dernières versions K8s sont requises, ou pour un cluster unique géré par une équipe dédiée. La simplicité opérationnelle prime souvent sur l'intégration native.
+
+**Zun doit être évité** pour tout nouveau projet. Son cas d'usage théorique (conteneurs OpenStack-natifs sans orchestration) n'a pas trouvé de marché, et le projet survit uniquement grâce au cycle automatisé de releases OpenStack et à un mainteneur dévoué.
+
+**Kata Containers** mérite considération pour les workloads multi-tenant, l'exécution de code non-fiable (CI/CD, FaaS), ou les exigences de compliance strictes. Ses performances approchent désormais les conteneurs natifs avec les hyperviseurs modernes.
+
+Enfin, **Kolla-Ansible reste le standard** pour déployer OpenStack lui-même, avec **OpenStack-Helm** comme option pour les organisations Kubernetes-natives. L'écosystème converge vers LOKI : Linux, OpenStack pour l'IaaS, Kubernetes pour les conteneurs, le tout intégré de manière cohésive. Cette complémentarité — et non le remplacement d'une technologie par l'autre — définit l'infrastructure ouverte moderne.
