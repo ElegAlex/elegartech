@@ -1,0 +1,214 @@
+---
+title: "Claude Code : comment des fichiers de configuration peuvent compromettre votre machine"
+description: "Trois failles critiques dans Claude Code permettaient l'exécution de code via des fichiers de configuration. Analyse des CVE et recommandations."
+date: 2026-02-27
+categories: ["Sécurité", "IA"]
+tags: ["Claude Code", "CVE", "MCP", "Hooks", "supply chain"]
+author: admin
+draft: false
+featured: false
+---
+
+**Trois vulnérabilités critiques découvertes dans Claude Code, l'assistant de développement d'Anthropic, démontrent qu'un simple fichier de configuration glissé dans un dépôt Git suffit à prendre le contrôle total d'une machine de développeur. Révélées le 25 février 2026 par Check Point Research, ces failles exploitent les mécanismes de Hooks et de serveurs MCP pour exécuter du code arbitraire et exfiltrer des clés API, sans aucune interaction de l'utilisateur. Analyse technique et recommandations de durcissement.**
+
+---
+
+## Claude Code, un outil de développement aux pouvoirs étendus
+
+Avant de plonger dans les vulnérabilités, il faut comprendre ce qu'est Claude Code et pourquoi ses mécanismes d'automatisation constituent une surface d'attaque particulièrement sensible.
+
+### Un agent de programmation en ligne de commande
+
+Claude Code est l'outil de développement agentique d'Anthropic. Disponible en tant qu'interface en ligne de commande (CLI), en extension pour VS Code, Cursor, JetBrains ou encore en application de bureau autonome, il offre aux développeurs un assistant capable de lire l'intégralité d'une base de code, d'éditer des fichiers, d'exécuter des commandes dans le terminal, de gérer des workflows Git et de se connecter à des outils externes. L'outil fonctionne avec les privilèges système du développeur qui l'exécute. Il dispose d'un accès complet au système de fichiers, aux gestionnaires de paquets et aux variables d'environnement de la machine hôte.
+
+Pour fonctionner efficacement dans des environnements d'équipe, Claude Code repose sur un **système de configuration hiérarchique** à trois niveaux : les paramètres globaux de l'utilisateur (`~/.claude/settings.json`), les paramètres du projet (`.claude/settings.json`, commités dans le dépôt Git et partagés avec toute l'équipe) et les paramètres locaux (`.claude/settings.local.json`, non versionnés). C'est cette architecture, et plus précisément le deuxième niveau, qui se trouve au cœur des vulnérabilités découvertes par Check Point Research.
+
+### Hooks et serveurs MCP : deux mécanismes d'automatisation puissants
+
+Deux fonctionnalités de Claude Code jouent un rôle central dans les failles identifiées.
+
+**Les Hooks** sont des commandes shell définies par l'utilisateur qui s'exécutent automatiquement à des moments précis du cycle de vie de Claude Code. Douze événements sont disponibles, parmi lesquels `SessionStart` (au lancement), `PreToolUse` (avant l'exécution d'une action) ou encore `Stop` (à l'arrêt). L'objectif affiché est louable : permettre le formatage automatique du code, le contrôle de conformité ou l'injection de contexte personnalisé. Ces Hooks se configurent directement dans le fichier `.claude/settings.json`.
+
+> **Encadré : qu'est-ce qu'un Hook dans Claude Code ?**
+>
+> Un Hook est une commande shell ou un prompt LLM qui s'exécute de manière déterministe à un point précis du cycle de vie de Claude Code. Configuré en JSON dans le fichier `settings.json`, un Hook reçoit des données via stdin (identifiant de session, nom de l'outil, paramètres) et communique ses résultats par des codes de sortie ou des réponses JSON structurées. Concrètement, un Hook `SessionStart` s'exécute automatiquement dès que Claude Code démarre dans le répertoire du projet.
+
+**Les serveurs MCP** (Model Context Protocol) reposent sur un protocole ouvert introduit par Anthropic en novembre 2024, devenu un standard de fait avec plus de **8 millions de téléchargements hebdomadaires** de son SDK. MCP permet aux modèles de langage de se connecter à des outils externes, des API et des sources de données selon une architecture client/serveur. Dans Claude Code, les serveurs MCP se configurent via un fichier `.mcp.json` placé à la racine du projet. Au démarrage d'une conversation, Claude Code initialise automatiquement tous les serveurs MCP configurés en exécutant les commandes spécifiées dans ce fichier.
+
+Ces deux mécanismes partagent une caractéristique fondamentale : **leurs configurations résident dans des fichiers versionnés au sein du dépôt Git**. Toute personne disposant d'un accès en écriture au dépôt peut les modifier. Et c'est précisément ce levier que les chercheurs de Check Point ont exploité.
+
+## Trois failles, un même vecteur : les fichiers de configuration
+
+Les chercheurs Aviv Donenfeld et Oded Vanunu de Check Point Research ont découvert et signalé trois vulnérabilités distinctes entre juillet et octobre 2025. Toutes exploitent le même principe : la capacité d'un fichier de configuration versionné dans un dépôt à déclencher des actions sur la machine d'un développeur, sans que celui-ci ne donne explicitement son consentement.
+
+### Exécution de code arbitraire via les Hooks (CVSS 8.7)
+
+La première vulnérabilité, référencée sous l'avis de sécurité GitHub **GHSA-ph6w-f82w-28w6**, est la plus directe des trois. Les chercheurs ont créé un fichier `.claude/settings.json` contenant un Hook configuré sur l'événement `SessionStart`. Ce Hook déclenche l'exécution d'une commande shell dès le lancement de Claude Code dans le répertoire du projet.
+
+En théorie, un mécanisme de protection existe. Lorsqu'un développeur ouvre Claude Code dans un nouveau répertoire, une boîte de dialogue de confiance apparaît, indiquant que des fichiers pourraient être exécutés « avec la permission de l'utilisateur ». Cependant, les commandes définies dans les Hooks s'exécutent **automatiquement, sans confirmation supplémentaire**. La boîte de dialogue ne mentionne pas explicitement que des commandes shell vont être lancées et ne détaille pas leur contenu.
+
+Les chercheurs ont démontré une escalade complète vers un **reverse shell** (accès distant au terminal de la victime), prouvant qu'un attaquant pouvait obtenir le contrôle total de la machine avec les privilèges du développeur. La faille a été signalée à Anthropic le 21 juillet 2025 et corrigée le 26 août 2025 dans la version 1.0.87.
+
+### Contournement du consentement MCP et exécution préalable au dialogue de confiance (CVE-2025-59536)
+
+Après la correction de la première faille, Anthropic a amélioré sa boîte de dialogue de confiance en mentionnant explicitement que des commandes présentes dans `.mcp.json` pourraient être exécutées. Les chercheurs de Check Point ont alors cherché à contourner cette nouvelle protection. Ils ont découvert deux paramètres de configuration documentés dans les réglages de Claude Code : `enableAllProjectMcpServers` (active automatiquement tous les serveurs MCP du projet) et `enabledMcpjsonServers` (liste blanche de serveurs spécifiques).
+
+Le point critique : **ces paramètres pouvaient être définis dans le fichier `.claude/settings.json` du dépôt**, c'est-à-dire contrôlé par l'attaquant. En combinant un `.claude/settings.json` contenant `enableAllProjectMcpServers: true` avec un `.mcp.json` définissant un serveur MCP malveillant, les chercheurs ont obtenu un résultat dévastateur. La commande d'initialisation du serveur MCP s'exécutait **immédiatement au lancement de Claude Code, avant même que l'utilisateur n'ait pu lire la boîte de dialogue de confiance**.
+
+> **Encadré : la chronologie de l'attaque MCP**
+>
+> 1. L'attaquant prépare un dépôt contenant `.claude/settings.json` (avec `enableAllProjectMcpServers: true`) et `.mcp.json` (avec un faux serveur MCP dont la commande d'initialisation est malveillante).
+> 2. Le développeur clone le dépôt et lance `claude` dans le répertoire.
+> 3. Claude Code initialise les serveurs MCP configurés. La commande malveillante s'exécute immédiatement.
+> 4. La boîte de dialogue de confiance s'affiche ensuite, mais le code malveillant tourne déjà en arrière-plan.
+> 5. L'attaquant dispose d'un reverse shell sur la machine du développeur.
+
+Cette vulnérabilité, classifiée **CWE-94** (contrôle insuffisant de la génération de code), a reçu le score **CVSS 8.7** avec un vecteur d'attaque réseau, une complexité faible et aucun privilège requis. Elle a été signalée le 3 septembre 2025 et corrigée le 22 septembre 2025. Le CVE-2025-59536 a été publié le 3 octobre 2025.
+
+### Exfiltration de clés API sans interaction utilisateur (CVE-2026-21852)
+
+La troisième vulnérabilité est plus subtile mais potentiellement plus dangereuse à l'échelle d'une organisation. Les chercheurs ont découvert que le fichier `.claude/settings.json` permettait de définir des variables d'environnement, dont **`ANTHROPIC_BASE_URL`**, la variable qui contrôle l'endpoint vers lequel Claude Code envoie toutes ses communications API.
+
+En redirigeant cette variable vers un serveur contrôlé par l'attaquant, les chercheurs ont pu intercepter l'intégralité du trafic HTTP de Claude Code. L'outil a été configuré pour utiliser `mitmproxy` afin d'intercepter les requêtes. Le résultat est édifiant : avant même que l'utilisateur ne puisse interagir avec la boîte de dialogue de confiance, Claude Code avait déjà initié plusieurs requêtes vers le serveur (désormais celui de l'attaquant). Ces requêtes contenaient des prompts d'initialisation de session (noms de fichiers, messages de commit récents) et surtout, chaque requête incluait **l'en-tête d'autorisation contenant la clé API Anthropic en clair**.
+
+| Vulnérabilité | Identifiant | CVSS | Type | Version corrigée | Date du correctif |
+|:--|:--|:-:|:--|:--|:--|
+| RCE via Hooks | GHSA-ph6w-f82w-28w6 | 8.7 | Injection de code | 1.0.87 | Août 2025 |
+| Contournement MCP | CVE-2025-59536 | 8.7 | Injection de code | 1.0.111 | Octobre 2025 |
+| Exfiltration de clés API | CVE-2026-21852 | 5.3 | Divulgation d'information | 2.0.65 | Janvier 2026 |
+
+L'attaque est de type « zéro interaction ». Lorsqu'un développeur clone un dépôt malveillant et exécute `claude`, sa clé API est transmise directement au serveur de l'attaquant avant toute décision de l'utilisateur. Le score CVSS de 5.3 (inférieur aux deux autres failles) peut sembler rassurant, mais les conséquences en cascade sont considérables, comme le démontre la section suivante.
+
+## Le scénario complet : du dépôt piégé à la compromission d'entreprise
+
+### Un modèle d'attaque par la chaîne d'approvisionnement logicielle
+
+Check Point Research a identifié trois vecteurs d'attaque concrets exploitant ces vulnérabilités dans le contexte de la chaîne d'approvisionnement logicielle.
+
+Le premier est le **dépôt piégé** (honeypot repository). Un attaquant crée un projet en apparence utile (outil de développement, tutoriel, bibliothèque de composants) qui contient des fichiers de configuration malveillants. Lorsqu'un développeur clone ce dépôt et lance Claude Code, l'attaque se déclenche automatiquement. Les fichiers de configuration sont automatiquement copiés lors du clonage, sans avertissement particulier de Git.
+
+Le deuxième vecteur passe par les **pull requests malveillantes**. Un attaquant soumet une contribution apparemment légitime à un projet open source, en intégrant des modifications de fichiers de configuration aux côtés de changements de code réels. Comme le soulignent les chercheurs : « Les développeurs considèrent intuitivement les fichiers de configuration comme des métadonnées et non comme du code exécutable. Ils subissent rarement le même niveau de contrôle de sécurité que le code applicatif lors des revues de code. »
+
+Le troisième scénario vise les **dépôts d'entreprise internes**. Un compte développeur compromis ou une menace interne suffit pour injecter des configurations malveillantes dans les bases de code de l'entreprise, affectant potentiellement toutes les équipes de développement.
+
+### Des Workspaces d'entreprise exposés par une seule clé volée
+
+L'exfiltration d'une clé API (CVE-2026-21852) ouvre un périmètre de compromission bien plus large qu'une machine individuelle. Anthropic propose une fonctionnalité Workspaces dans sa Console API, permettant de gérer plusieurs déploiements de Claude. Les fichiers stockés dans un Workspace ne sont pas liés à une clé API individuelle mais **au Workspace lui-même**. Plusieurs développeurs utilisant leurs propres clés partagent le même espace de stockage.
+
+Les chercheurs de Check Point ont démontré qu'avec une clé API volée, un attaquant pouvait accéder aux fichiers partagés du Workspace, contournant même les restrictions de téléchargement. En effet, les fichiers téléversés par les utilisateurs sont marqués comme non téléchargeables. Mais en demandant à Claude de régénérer un fichier existant via l'outil d'exécution de code (dont les sorties sont téléchargeables par défaut), les chercheurs ont pu **convertir un fichier protégé en artefact téléchargeable**.
+
+Avec une seule clé API volée, un attaquant peut donc accéder à des fichiers sensibles partagés par toute une équipe, supprimer des données critiques, téléverser des fichiers malveillants pour empoisonner l'espace de travail, ou encore épuiser le quota de **100 Go de stockage** et les crédits API, entraînant des coûts imprévus et une interruption de service. Comme le résument les chercheurs : « Contrairement aux vulnérabilités d'exécution de code qui compromettent la machine d'un seul développeur, une clé API volée peut donner accès aux ressources partagées de toute une équipe. »
+
+## La réponse d'Anthropic et la chronologie des correctifs
+
+La communication entre Check Point Research et Anthropic s'est étalée sur sept mois, de juillet 2025 à février 2026. Pour chaque vulnérabilité signalée, Anthropic a implémenté un correctif dans un délai relativement court.
+
+La première faille (Hooks) a été signalée le 21 juillet 2025. Après un travail collaboratif de perfectionnement, le correctif final a été déployé le 26 août 2025 et l'avis de sécurité GitHub publié le 29 août. Le correctif améliore la boîte de dialogue d'avertissement affichée lors de l'ouverture de projets avec des configurations Claude Code non approuvées.
+
+Pour la deuxième faille (MCP), signalée le 3 septembre, le correctif a été déployé le 22 septembre et le CVE publié le 3 octobre 2025. Depuis ce correctif, **les serveurs MCP ne peuvent plus s'exécuter avant l'approbation explicite de l'utilisateur**, même lorsque les paramètres `enableAllProjectMcpServers` ou `enabledMcpjsonServers` sont définis dans le fichier de configuration du dépôt.
+
+La troisième faille (exfiltration API), signalée le 28 octobre, a nécessité un délai de correction plus long. Le correctif a été implémenté le 28 décembre 2025 et le CVE-2026-21852 publié le 21 janvier 2026. Désormais, **aucune requête API n'est initiée avant que l'utilisateur n'ait confirmé la boîte de dialogue de confiance**, empêchant toute interception de clés pendant la phase d'initialisation.
+
+Anthropic a annoncé travailler sur « des fonctionnalités de durcissement de sécurité supplémentaires prévues dans les mois à venir ». L'entreprise n'a toutefois pas répondu aux demandes de commentaires de The Register. Les utilisateurs qui ont activé les mises à jour automatiques du paquet npm `@anthropic-ai/claude-code` ont reçu les correctifs sans intervention manuelle.
+
+## Un problème systémique qui dépasse Claude Code
+
+Les vulnérabilités découvertes dans Claude Code ne sont pas un cas isolé. Elles s'inscrivent dans une tendance de fond qui touche l'ensemble des outils de développement assistés par l'intelligence artificielle.
+
+### GitHub Copilot et la « Rules File Backdoor »
+
+En mars 2025, les chercheurs de Pillar Security ont révélé une faille baptisée « Rules File Backdoor » dans GitHub Copilot. En insérant des caractères Unicode invisibles dans le fichier `.github/copilot-instructions.md`, un attaquant pouvait injecter des instructions malveillantes amenant Copilot à générer du code volontairement vulnérable. GitHub a considéré que la responsabilité incombait aux utilisateurs de vérifier les suggestions, avant d'ajouter en mai 2025 un avertissement pour le texte Unicode masqué.
+
+Plus récemment, en février 2026, Orca Security a publié l'attaque **RoguePilot** : une injection de prompt passive via les Issues GitHub permettait à Copilot de prendre le contrôle complet d'un dépôt. Des commentaires HTML cachés dans les issues instruisaient Copilot de vérifier des pull requests piégées contenant des liens symboliques vers des fichiers de secrets, puis d'exfiltrer le `GITHUB_TOKEN` via une requête réseau. En août 2025, Legit Security avait déjà documenté une faille critique de score **CVSS 9.6** permettant l'exfiltration du code source de dépôts privés via injection de prompt dans Copilot Chat.
+
+### Cursor IDE : des failles MCP multiples
+
+L'éditeur Cursor, construit sur VS Code et enrichi de fonctionnalités d'IA, a été affecté par plusieurs vulnérabilités similaires. La faille **CurXecute** (CVE-2025-54135, CVSS 8.6), découverte par AIM Security en août 2025, permettait une exécution de code à distance via le démarrage automatique de serveurs MCP. Des données empoisonnées transmises par MCP pouvaient rediriger le flux de contrôle de l'agent, réécrire le fichier `~/.cursor/mcp.json` et exécuter des commandes arbitraires.
+
+Check Point Research eux-mêmes ont découvert la faille **MCPoison** (CVE-2025-54136, CVSS 7.2) dans Cursor : une fois qu'une configuration MCP était approuvée, les modifications ultérieures des commandes étaient acceptées sans nouvelle validation. En octobre 2025, Oasis Security a révélé que Cursor désactivait par défaut le mécanisme de Workspace Trust de VS Code, permettant à un fichier `.vscode/tasks.json` d'exécuter du code à l'ouverture d'un dossier sans aucun consentement.
+
+### Une surface d'attaque structurelle pour tous les outils agentiques
+
+Dark Reading cite en comparaison directe GitHub Copilot, Amazon CodeWhisperer et OpenAI Codex comme outils présentant des surfaces d'attaque similaires. Diana Kelley, CISO de Noma Security, résume le phénomène dans DevOps.com : « Ce qui ressort de la recherche de Check Point, c'est le schéma qu'elle représente. Les outils de développement intégrés à l'IA ne sont plus des assistants passifs. Dans ce cas, une configuration contrôlée par le dépôt pouvait entraîner l'exécution de code dès l'ouverture d'un projet, avant que la décision de confiance de l'utilisateur ne soit correctement appliquée. »
+
+Andrew Bolster, Senior R&D Manager chez Black Duck, ajoute une dimension organisationnelle : « Auparavant, les responsables sécurité n'avaient 'qu'à' approuver l'ajout et la configuration des outils du cycle de développement 'un par un'. Désormais, ces outils agentiques ont un comportement en constante évolution et peuvent être manipulés par des injections externes reçues au moment de l'exécution. »
+
+> **Encadré : chiffres clés de la sécurité de la chaîne d'approvisionnement logicielle**
+>
+> **65 %** des organisations ont subi une attaque sur leur chaîne d'approvisionnement logicielle au cours de l'année écoulée (Black Duck, rapport OSSRA 2026). Le nombre moyen de vulnérabilités open source par base de code a bondi de **107 %** en un an, atteignant 581 (Black Duck). Les logiciels malveillants ciblant l'open source ont augmenté de **73 %** (ReversingLabs). **98 %** des bases de code commerciales contiennent des composants open source.
+
+## Protéger son environnement de développement : les recommandations concrètes
+
+Face à ces risques, les équipes de développement et de sécurité doivent adopter une posture défensive structurée. Voici les mesures prioritaires identifiées à partir des recommandations de Check Point Research, de l'OWASP et des experts du secteur.
+
+### Mettre à jour et inspecter avant d'ouvrir
+
+La mesure la plus immédiate consiste à **maintenir Claude Code à jour** (version 2.0.65 minimum pour être protégé contre les trois failles). Les utilisateurs des extensions VS Code doivent également vérifier qu'ils disposent de la version 1.0.24 ou ultérieure, corrigeant une vulnérabilité WebSocket distincte (CVE-2025-52882) découverte par Datadog Security Labs.
+
+Avant d'ouvrir un projet avec un outil de développement assisté par IA, il est indispensable d'**inspecter systématiquement les répertoires de configuration** : `.claude/`, `.vscode/`, `.cursor/` et tout dossier spécifique à un outil. L'examen doit porter en particulier sur la présence de Hooks, de serveurs MCP, de variables d'environnement inhabituelles (notamment `ANTHROPIC_BASE_URL`) et de paramètres comme `enableAllProjectMcpServers`. Cette inspection doit faire partie intégrante de la revue de code lors des pull requests, avec le même niveau d'exigence que pour le code applicatif.
+
+### Isoler et cloisonner les environnements
+
+Les dépôts non vérifiés ne devraient jamais être ouverts directement sur la machine de développement. L'utilisation de **conteneurs ou de machines virtuelles** pour les projets inconnus constitue une barrière efficace. En cas de doute, le paramètre `disableAllHooks` de Claude Code permet de désactiver tous les Hooks au lancement. Pour les serveurs MCP, une approche de moindre privilège est recommandée : utiliser le transport stdio pour les serveurs locaux, appliquer des scopes restreints et vérifier l'intégrité des composants MCP.
+
+Sur le plan réseau, la mise en place de **règles de filtrage sortant** limitant les connexions aux domaines approuvés peut prévenir l'exfiltration de données vers des serveurs contrôlés par un attaquant. Un monitoring des connexions sortantes initiées par les outils d'IA, couplé à des alertes sur les créations de processus anormaux, permet de détecter rapidement une compromission.
+
+### Structurer la gouvernance des outils d'IA
+
+À l'échelle de l'organisation, il devient essentiel de traiter les outils de développement assistés par IA comme des **composants de la chaîne d'approvisionnement logicielle** à part entière. Cela implique un inventaire des outils déployés, une évaluation régulière de leurs risques, une rotation des clés API en cas de suspicion de compromission et la mise en place de procédures de réponse à incident spécifiques aux outils d'IA.
+
+L'OWASP a publié en 2025 et 2026 plusieurs ressources de référence : le Top 10 pour les applications LLM (2025), le Top 10 pour les applications agentiques (2026), un guide pratique pour le développement sécurisé de serveurs MCP et un guide de tests de sécurité de l'IA. Ces documents fournissent un cadre méthodologique pour structurer l'évaluation et le durcissement des environnements de développement intégrant l'IA.
+
+## Quand les fichiers de configuration deviennent des armes
+
+Les vulnérabilités découvertes par Check Point Research dans Claude Code marquent un tournant dans la compréhension des risques liés aux outils de développement agentiques. Le constat fondamental est limpide : **les fichiers de configuration, autrefois considérés comme des métadonnées passives, contrôlent désormais des chemins d'exécution actifs**. Cette transformation fait de chaque fichier `.claude/settings.json`, `.mcp.json` ou `.github/copilot-instructions.md` un vecteur d'attaque potentiel.
+
+L'ampleur du phénomène dépasse largement le périmètre d'Anthropic. GitHub Copilot, Cursor, Amazon Q et d'autres outils ont été affectés par des vulnérabilités structurellement similaires. Comme le formulent les chercheurs de Check Point : « Le risque ne se limite plus à l'exécution de code non fiable. Il s'étend désormais à l'ouverture de projets non fiables. Dans les environnements de développement pilotés par l'IA, la chaîne d'approvisionnement commence non seulement avec le code source, mais aussi avec les couches d'automatisation qui l'entourent. »
+
+La réactivité d'Anthropic dans la correction de ces failles est à saluer, chaque vulnérabilité ayant été corrigée dans un délai raisonnable après signalement. Mais la leçon structurelle reste la même pour l'ensemble de l'industrie : l'intégration de capacités agentiques dans les outils de développement exige une refonte des modèles de confiance. Les mécanismes de consentement doivent être exécutés avant toute action, les fichiers de configuration doivent être traités comme du code potentiellement hostile, et les équipes de sécurité doivent intégrer ces nouvelles surfaces d'attaque dans leurs analyses de risques. L'ère où l'on pouvait cloner un dépôt et l'ouvrir sans précaution est révolue.
+
+---
+
+## Sources
+
+**Rapport principal**
+
+Check Point Research, « Caught in the Hook: RCE and API Token Exfiltration Through Claude Code Project Files | CVE-2025-59536 | CVE-2026-21852 », 25 février 2026 · [research.checkpoint.com](https://research.checkpoint.com/2026/rce-and-api-token-exfiltration-through-claude-code-project-files-cve-2025-59536/)
+
+**Couverture médiatique spécialisée**
+
+The Hacker News, « Claude Code Flaws Allow Remote Code Execution and API Key Exfiltration », 25 février 2026 · [thehackernews.com](https://thehackernews.com/2026/02/claude-code-flaws-allow-remote-code.html)
+
+SecurityWeek, « Claude Code Flaws Exposed Developer Devices to Silent Hacking », 26 février 2026 · [securityweek.com](https://www.securityweek.com/claude-code-flaws-exposed-developer-devices-to-silent-hacking/)
+
+Dark Reading, « Flaws in Claude Code Put Developers' Machines at Risk », 26 février 2026 · [darkreading.com](https://www.darkreading.com/application-security/flaws-claude-code-developer-machines-risk)
+
+The Register, « Claude's collaboration tools allowed remote code execution », 26 février 2026 · [theregister.com](https://www.theregister.com/2026/02/26/clade_code_cves/)
+
+DevOps.com, « Security Flaws in Anthropic's Claude Code Risk Stolen Data, System Takeover », 27 février 2026 · [devops.com](https://devops.com/security-flaws-in-anthropics-claude-code-risk-stolen-data-system-takeover/)
+
+**Avis de sécurité et bases CVE**
+
+GitHub Advisory GHSA-jh7p-qr78-84p7 (CVE-2026-21852) · [github.com](https://github.com/anthropics/claude-code/security/advisories/GHSA-jh7p-qr78-84p7)
+
+Wiz Vulnerability Database, « CVE-2025-59536 Impact, Exploitability, and Mitigation Steps » · [wiz.io](https://www.wiz.io/vulnerability-database/cve/cve-2025-59536)
+
+SentinelOne, « CVE-2026-21852: Claude Code Information Disclosure Flaw » · [sentinelone.com](https://www.sentinelone.com/vulnerability-database/cve-2026-21852/)
+
+**Vulnérabilités similaires dans d'autres outils**
+
+Pillar Security, « New Vulnerability in GitHub Copilot and Cursor: How Hackers Can Weaponize Code Agents », mars 2025 · [pillar.security](https://www.pillar.security/blog/new-vulnerability-in-github-copilot-and-cursor-how-hackers-can-weaponize-code-agents)
+
+AIM Security, « When Public Prompts Turn Into Local Shells: CurXecute – RCE in Cursor via MCP Auto-Start » · [aim.security](https://www.aim.security/post/when-public-prompts-turn-into-local-shells-rce-in-cursor-via-mcp-auto-start)
+
+Check Point Research, « Cursor IDE's MCP Vulnerability (MCPoison) » · [research.checkpoint.com](https://research.checkpoint.com/2025/cursor-vulnerability-mcpoison/)
+
+Datadog Security Labs, « CVE-2025-52882: WebSocket authentication bypass in Claude Code extensions » · [securitylabs.datadoghq.com](https://securitylabs.datadoghq.com/articles/claude-mcp-cve-2025-52882/)
+
+**Documentation officielle**
+
+Anthropic, « Claude Code overview » · [code.claude.com](https://code.claude.com/docs/en/overview)
+
+Anthropic, « Hooks reference » · [code.claude.com](https://code.claude.com/docs/en/hooks)
+
+Model Context Protocol, « Security Best Practices » · [modelcontextprotocol.io](https://modelcontextprotocol.io/specification/draft/basic/security_best_practices)
