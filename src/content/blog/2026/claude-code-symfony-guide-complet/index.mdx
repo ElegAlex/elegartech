@@ -1,0 +1,633 @@
+---
+title: "Claude Code + Symfony : le guide complet"
+description: "Tutoriel pas à pas pour configurer Claude Code avec Symfony : AGENTS.md, plugins, hooks, mode Plan, AI Skills et Agent Teams."
+date: 2026-03-08
+categories: ["IA", "Développement"]
+tags: ["Claude Code", "Symfony", "PHP", "tutoriel"]
+author: admin
+draft: false
+featured: true
+difficulty: intermédiaire
+---
+
+**Ce tutoriel accompagne pas à pas la mise en place d'un environnement Claude Code opérationnel pour le développement Symfony. De l'installation à la configuration des hooks, en passant par le fichier AGENTS.md, les plugins, les AI Skills et le mode Plan, chaque étape est détaillée avec les commandes exactes, les fichiers complets prêts à copier, et les pièges à éviter. Article compagnon de [« Quand Symfony apprend à parler aux agents IA »](/blog/2026/claude-code-symfony-ecosysteme), qui analyse les enjeux et les limites de cet écosystème.**
+
+---
+
+## Prérequis
+
+Avant de commencer, vérifier que l'environnement dispose des éléments suivants :
+
+**Côté système :**
+
+- Node.js 18+ (`node --version`)
+- npm (`npm --version`)
+- PHP 8.2+ (`php --version`)
+- Composer (`composer --version`)
+- Git (`git --version`)
+
+**Côté Symfony :**
+
+- Un projet Symfony existant (6.4 LTS, 7.x ou 8.0)
+- Les outils de qualité installés : PHPStan, PHPUnit ou Pest, PHP-CS-Fixer
+
+**Côté Anthropic :**
+
+- Un compte Claude avec un abonnement actif. Le plan Pro (20 dollars par mois) fonctionne. Le plan Max (100 ou 200 dollars par mois) est recommandé pour un usage intensif, notamment pour l'accès à Opus 4.6 en effort High.
+
+> **Encadré : pour celles et ceux qui viennent de Copilot ou Cursor**
+>
+> Claude Code fonctionne en **CLI** (ligne de commande), pas comme une extension d'autocomplétion dans l'éditeur. C'est un changement de paradigme : au lieu de suggestions en temps réel pendant la frappe, Claude Code prend en charge des tâches complètes (implémenter une feature, corriger un bug, refactorer un service). Le workflow est conversationnel, pas prédictif. Les conventions projet ne se configurent pas via un panneau de settings graphique mais via un fichier Markdown (AGENTS.md) à la racine du projet.
+
+---
+
+## Étape 1 : Installer Claude Code
+
+L'installation se fait via npm en global :
+
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+
+Vérifier l'installation :
+
+```bash
+claude --version
+```
+
+Se connecter au compte Anthropic :
+
+```bash
+claude auth login
+```
+
+Cette commande ouvre un navigateur pour l'authentification OAuth. Une fois connectée, la session persiste entre les redémarrages.
+
+Pour lancer Claude Code dans un projet Symfony :
+
+```bash
+cd /chemin/vers/mon-projet-symfony
+claude
+```
+
+Claude Code démarre dans le terminal, lit automatiquement les fichiers CLAUDE.md et AGENTS.md du projet (s'ils existent), et attend les instructions.
+
+---
+
+## Étape 2 : Intégrer Claude Code dans l'IDE
+
+### PhpStorm (recommandé par Eguiluz)
+
+Installer le plugin officiel Anthropic pour JetBrains :
+
+1. Ouvrir PhpStorm, aller dans **Settings > Plugins > Marketplace**
+2. Rechercher « Claude Code »
+3. Installer le plugin **Claude Code** par Anthropic
+4. Redémarrer PhpStorm
+
+Après redémarrage, un panneau Claude Code apparaît. Le placer en **panneau latéral droit** pour avoir le code à gauche et l'agent à droite. C'est le setup qu'utilise Eguiluz au quotidien.
+
+### VS Code
+
+Installer l'extension officielle depuis le marketplace VS Code :
+
+1. Ouvrir la palette de commandes (Ctrl+Shift+P)
+2. Taper « Extensions: Install Extensions »
+3. Rechercher « Claude Code » par Anthropic
+4. Installer et recharger
+
+> **Encadré : pour celles et ceux qui débutent avec Claude Code**
+>
+> Claude Code n'est pas un chatbot. C'est un **agent** qui peut lire, écrire et exécuter des commandes dans le projet. Il a accès au système de fichiers, peut lancer PHPUnit, PHPStan, PHP-CS-Fixer, et modifier directement le code source. C'est pourquoi la configuration des permissions (étape 5) est indispensable : il faut explicitement autoriser les commandes sûres et bloquer les dangereuses.
+
+---
+
+## Étape 3 : Créer le fichier AGENTS.md
+
+C'est **l'étape la plus importante**. Le fichier AGENTS.md décrit les conventions du projet. Sans lui, Claude Code produit du code générique qui ne respecte pas les standards de l'équipe. Avec un bon AGENTS.md, les résultats sont radicalement différents.
+
+Créer le fichier à la racine du projet :
+
+```bash
+touch AGENTS.md
+```
+
+Voici un template complet pour un projet Symfony, inspiré du [fichier AGENTS.md d'EasyAdmin](https://github.com/EasyCorp/EasyAdminBundle/blob/4.x/AGENTS.md) et adapté aux conventions courantes :
+
+```markdown
+# Conventions du projet
+
+## Langage et versions
+
+- PHP 8.3+ avec strict_types activé dans tous les fichiers
+- Symfony 7.2
+- Doctrine ORM 3.x
+
+## Architecture
+
+- Suivre les conventions Symfony (structure src/, config/, templates/)
+- Utiliser la promotion de constructeur pour l'injection de dépendances
+- Utiliser les attributs PHP pour le routing, le mapping Doctrine et la configuration (pas de YAML ni de XML pour ces usages)
+- Utiliser Symfony Messenger pour les opérations asynchrones plutôt que de placer la logique dans les contrôleurs
+- Un service par fichier, un contrôleur par ressource
+
+## Conventions de nommage
+
+- Classes : UpperCamelCase
+- Méthodes et variables : camelCase
+- Templates Twig : snake_case (ex: user_profile.html.twig)
+- Fichiers de configuration : snake_case
+
+## Standards de code
+
+- Comparaisons strictes uniquement (=== et !==)
+- Conditions Yoda : if (null === $value)
+- Type hints sur tous les paramètres, retours et propriétés
+- Pas de commentaires évidents. Documenter uniquement ce qui n'est pas immédiatement lisible
+- Pas de code mort, pas de dump(), pas de dd()
+
+## Tests
+
+- PHPUnit pour les tests unitaires et fonctionnels
+- Nommer les tests : test + description en camelCase (ex: testUserCannotAccessAdminWithoutRole)
+- Un fichier de test par classe testée
+- Les tests fonctionnels utilisent le WebTestCase de Symfony
+
+## Commandes de validation
+
+Exécuter ces commandes pour vérifier que le code est correct :
+
+- `php bin/console lint:container` (vérifie la compilation du conteneur DI)
+- `php vendor/bin/phpstan analyse` (analyse statique)
+- `php vendor/bin/phpunit` (exécution des tests)
+- `php vendor/bin/php-cs-fixer fix --dry-run --diff` (vérification du style)
+
+## Fichiers et répertoires importants
+
+- `src/Entity/` : entités Doctrine
+- `src/Controller/` : contrôleurs HTTP
+- `src/Service/` : services métier
+- `src/MessageHandler/` : handlers Messenger
+- `templates/` : templates Twig
+- `config/` : configuration Symfony
+```
+
+**Pourquoi AGENTS.md et pas CLAUDE.md ?** Le fichier `CLAUDE.md` ne fonctionne qu'avec Claude Code. Le fichier `AGENTS.md` fonctionne avec Claude Code, Codex, Gemini CLI, GitHub Copilot, Cursor et Windsurf. En cas de changement d'outil, l'investissement en formalisation des conventions est préservé.
+
+> **Encadré : pour celles et ceux qui viennent de Copilot ou Cursor**
+>
+> L'équivalent dans Cursor est le fichier `.cursorrules` (ou les fichiers `.mdc`). Dans GitHub Copilot, c'est `.github/copilot-instructions.md`. Le format est similaire (du Markdown avec des instructions), mais **les conventions ne se transfèrent pas automatiquement** d'un outil à l'autre. C'est le principal argument en faveur d'AGENTS.md : un seul fichier pour tous les agents. Un outil comme [rule-porter](https://github.com/nedcodes/rule-porter) permet de convertir entre formats si nécessaire.
+
+**Piège à éviter :** ne pas générer le fichier AGENTS.md via la commande `/init` de Claude Code et s'en contenter. Le résultat est générique et souvent trop verbeux. Rédiger le fichier manuellement, tester, et **le mettre à jour en continu**. Eguiluz insiste : c'est la clé pour obtenir de bons résultats.
+
+---
+
+## Étape 4 : Installer les plugins essentiels
+
+Claude Code utilise un système de **marketplaces** (dépôts Git contenant des plugins). Le marketplace officiel `claude-plugins-official` est activé par défaut. Un second marketplace Anthropic contient des plugins supplémentaires indispensables.
+
+### Ajouter le second marketplace
+
+Depuis le terminal Claude Code :
+
+```
+/plugins
+```
+
+Naviguer avec les flèches vers l'onglet **Marketplaces**, sélectionner **+ Add Marketplace**, puis taper :
+
+```
+anthropics/claude-plugins-official
+```
+
+### Installer les six plugins recommandés
+
+Toujours depuis `/plugins`, naviguer dans chaque marketplace et installer :
+
+```
+php-lsp
+context7
+code-review
+code-simplifier
+security-guidance
+playwright
+```
+
+Alternativement, en ligne de commande :
+
+```bash
+claude plugin install php-lsp
+claude plugin install context7
+claude plugin install code-review
+claude plugin install code-simplifier
+claude plugin install security-guidance
+claude plugin install playwright
+```
+
+### Installer Intelephense (prérequis pour php-lsp)
+
+Le plugin php-lsp nécessite le serveur de langage Intelephense installé globalement :
+
+```bash
+npm install -g intelephense
+```
+
+Vérifier que l'exécutable est dans le PATH :
+
+```bash
+which intelephense
+```
+
+Si la commande retourne un chemin, tout est bon. Sinon, vérifier que le répertoire global npm est dans le PATH (`npm config get prefix` puis ajouter `/bin` au PATH).
+
+**Pourquoi php-lsp est critique :** sans lui, Claude Code explore le code par recherche textuelle (grep), ce qui prend des secondes et consomme massivement la fenêtre de contexte. Avec le LSP, la navigation se fait en millisecondes et consomme 6 fois moins de tokens. Plus important : le LSP permet à Claude Code de **vérifier** ses hypothèses contre le système de types réel du projet au lieu d'halluciner des noms de méthodes.
+
+> **Encadré : pour celles et ceux qui débutent avec Claude Code**
+>
+> Les plugins ne s'activent pas comme des extensions dans un navigateur. Certains (comme php-lsp) nécessitent un binaire installé sur le système. D'autres (comme context7) fonctionnent via le protocole MCP (Model Context Protocol). Après installation, vérifier l'onglet **Errors** dans `/plugins`. Le message « Executable not found in $PATH » signifie que le binaire requis n'est pas installé ou pas accessible.
+
+---
+
+## Étape 5 : Configurer le fichier settings.json global
+
+Le fichier `~/.claude/settings.json` configure les paramètres appliqués à **toutes** les sessions Claude Code. C'est là que se définissent les permissions, les plugins activés et les variables d'environnement.
+
+Créer ou éditer le fichier :
+
+```bash
+mkdir -p ~/.claude
+nano ~/.claude/settings.json
+```
+
+Voici la configuration complète recommandée pour un développeur Symfony, basée sur celle d'Eguiluz :
+
+```json
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(curl:*)",
+      "Bash(diff:*)",
+      "Bash(echo:*)",
+      "Bash(find:*)",
+      "Bash(gh:*)",
+      "Bash(git:*)",
+      "Bash(grep:*)",
+      "Bash(head:*)",
+      "Bash(ls:*)",
+      "Bash(pwd)",
+      "Bash(tail:*)",
+      "Bash(tree:*)",
+      "Bash(wc:*)",
+      "Bash(which:*)",
+      "Bash(php-cs-fixer:*)",
+      "Bash(php:*)",
+      "Bash(phpstan:*)",
+      "Bash(phpunit:*)",
+      "Bash(symfony:*)"
+    ],
+    "deny": [
+      "Bash(rm:*)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./config/secrets/.*)",
+      "Read(./secrets/**)"
+    ],
+    "defaultMode": "acceptEdits"
+  },
+  "enabledPlugins": {
+    "php-lsp@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true
+  },
+  "alwaysThinkingEnabled": true
+}
+```
+
+**Ce que fait cette configuration :**
+
+La section `permissions.allow` autorise toutes les commandes courantes du développement Symfony (PHP, PHPStan, PHPUnit, PHP-CS-Fixer, Symfony CLI, Git, GitHub CLI) sans demander confirmation à chaque exécution. La section `permissions.deny` bloque la commande `rm` (suppression de fichiers) et interdit la lecture des fichiers sensibles (.env, secrets). Le `defaultMode: "acceptEdits"` permet à Claude Code de modifier les fichiers sans demander permission pour chaque édition.
+
+La variable `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` active la fonctionnalité expérimentale Agent Teams (plusieurs instances Claude Code travaillant en équipe).
+
+**Piège à éviter :** ne jamais utiliser `--dangerously-skip-permissions` lors du lancement de Claude Code. C'est l'équivalent de donner les clés root à un stagiaire. La configuration granulaire via settings.json offre la même fluidité sans les risques.
+
+> **Encadré : pour celles et ceux qui viennent de Copilot ou Cursor**
+>
+> Ni Copilot ni Cursor ne disposent d'un système de permissions aussi granulaire. C'est parce que Claude Code est un **agent autonome** qui exécute des commandes shell, pas un outil d'autocomplétion. Il peut lancer des migrations Doctrine, exécuter des tests, déployer du code. Le système de permissions est le garde-fou entre la productivité et la catastrophe.
+
+---
+
+## Étape 6 : Mettre en place les hooks
+
+Les hooks sont des commandes exécutées automatiquement quand Claude Code crée ou modifie un fichier. Ils garantissent que tout code produit par l'agent respecte les standards du projet sans intervention manuelle.
+
+Ajouter la section `hooks` au fichier `~/.claude/settings.json` (après la section `enabledPlugins`) :
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "case \"$CLAUDE_FILE_PATH\" in *.php) php-cs-fixer fix --quiet \"$CLAUDE_FILE_PATH\" 2>/dev/null || true ;; esac",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "case \"$CLAUDE_FILE_PATH\" in *.yaml|*.yml) php bin/console lint:yaml \"$CLAUDE_FILE_PATH\" ;; esac"
+          },
+          {
+            "type": "command",
+            "command": "case \"$CLAUDE_FILE_PATH\" in *.json) python3 -m json.tool \"$CLAUDE_FILE_PATH\" > /dev/null ;; esac"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Ce que font ces hooks :**
+
+Le premier formate automatiquement chaque fichier PHP modifié par Claude Code avec PHP-CS-Fixer. Le deuxième valide la syntaxe des fichiers YAML via la commande Symfony. Le troisième vérifie la validité JSON. Ils se déclenchent à chaque opération Write ou Edit de Claude Code, de manière transparente.
+
+**Prérequis :** PHP-CS-Fixer doit être installé et accessible dans le PATH. L'installer via Composer si ce n'est pas le cas :
+
+```bash
+composer require --dev friendsofphp/php-cs-fixer
+```
+
+---
+
+## Étape 7 : Installer les AI Skills Symfony UX
+
+Les AI Skills sont des paquets de connaissances structurées que Claude Code charge automatiquement quand il détecte une tâche correspondante. Pour les projets utilisant Symfony UX (Stimulus, Turbo, LiveComponent, TwigComponent), les skills de Simon André apportent les arbres de décision, les patterns recommandés et les pièges courants.
+
+### Cloner le dépôt
+
+```bash
+git clone https://github.com/smnandre/symfony-ux-skills.git /tmp/symfony-ux-skills
+```
+
+### Installation globale (disponible dans tous les projets)
+
+```bash
+cp -r /tmp/symfony-ux-skills/skills/symfony-ux ~/.claude/skills/
+cp -r /tmp/symfony-ux-skills/skills/stimulus ~/.claude/skills/
+cp -r /tmp/symfony-ux-skills/skills/turbo ~/.claude/skills/
+cp -r /tmp/symfony-ux-skills/skills/twig-component ~/.claude/skills/
+cp -r /tmp/symfony-ux-skills/skills/live-component ~/.claude/skills/
+```
+
+### Installation locale (partagée via le dépôt Git du projet)
+
+```bash
+cp -r /tmp/symfony-ux-skills/skills/* .claude/skills/
+git add .claude/skills/
+git commit -m "Add Symfony UX AI skills"
+```
+
+L'installation locale est préférable pour les équipes : chaque contributeur bénéficie des skills sans configuration supplémentaire.
+
+### Vérifier l'installation
+
+Relancer Claude Code et taper :
+
+```
+What skills are available?
+```
+
+Claude Code doit lister les skills installées avec leur description.
+
+> **Encadré : faut-il installer les skills si le projet n'utilise pas Symfony UX ?**
+>
+> Non. Les skills consomment de la fenêtre de contexte (même si le chargement est progressif). Ne les installer que pour les projets qui utilisent effectivement Stimulus, Turbo, LiveComponent ou TwigComponent. Pour un projet API pur (API Platform, sans frontend), elles sont inutiles.
+
+**Plugin communautaire alternatif :** pour des skills couvrant Doctrine, API Platform, Messenger, CQRS et le TDD, le plugin [superpowers-symfony](https://github.com/MakFly/superpowers-symfony) (49 skills, 13 commandes slash) mérite considération. L'installer comme plugin Claude Code :
+
+```bash
+git clone https://github.com/MakFly/superpowers-symfony ~/.claude/plugins/superpowers-symfony
+```
+
+Puis activer dans `settings.json` :
+
+```json
+"enabledPlugins": {
+    "superpowers-symfony@custom": true
+}
+```
+
+---
+
+## Étape 8 : Sélectionner le bon modèle
+
+Claude Code donne accès à plusieurs modèles avec des niveaux de capacité et de coût différents. Le choix du modèle se fait via la commande `/model` dans le CLI.
+
+**Pour la planification (mode Plan) :** sélectionner **Opus 4.6** en effort **High**. C'est le modèle le plus capable pour la réflexion architecturale. Il consomme plus de tokens mais la phase de planification est le moment où la qualité compte le plus.
+
+**Pour l'implémentation (mode Work) :** Sonnet 4.6 en effort Normal suffit pour la plupart des tâches d'implémentation. Réserver Opus pour les tâches de refactoring complexes ou les décisions architecturales.
+
+```
+/model opus-4-6
+```
+
+Le niveau d'effort (Low, Normal, High) contrôle la profondeur de réflexion du modèle. High consomme plus de tokens mais produit des résultats plus réfléchis, particulièrement sur les tâches non triviales.
+
+---
+
+## Étape 9 : Maîtriser le mode Plan
+
+Le mode Plan est le **différenciateur principal** de ce workflow. Quand le mode Plan est activé, Claude Code peut lire le code, poser des questions, analyser la structure, mais **ne peut modifier aucun fichier ni exécuter aucune commande**.
+
+### Activer le mode Plan
+
+Appuyer sur **Shift+Tab** dans le CLI pour cycler entre les modes. S'arrêter quand l'indicateur affiche `plan mode on`.
+
+### Le workflow complet
+
+**Phase 1 : Explorer.** Donner à Claude Code le contexte de la tâche. Mentionner les fichiers clés via le préfixe `@` :
+
+```
+Je veux ajouter un système de notifications par email quand un utilisateur
+passe commande. Regarde @src/Entity/Order.php, @src/MessageHandler/
+et @templates/email/ pour comprendre la structure actuelle.
+```
+
+**Phase 2 : Planifier.** Claude Code analyse le code, pose des questions de clarification, puis propose un plan structuré. Revoir le plan, poser des questions, demander des modifications :
+
+```
+Le plan est bon mais je préfère utiliser un EventSubscriber Doctrine
+plutôt qu'un listener dans le contrôleur. Peux-tu adapter ?
+```
+
+Itérer jusqu'à satisfaction. Pour les tâches complexes, **trente minutes de planification ne sont pas du temps perdu, c'est du temps investi**.
+
+**Phase 3 : Implémenter.** Quand le plan est validé, Claude Code propose plusieurs options. Sélectionner **« Yes, clear context and auto-accept edits »**. Cette option vide la fenêtre de contexte (le plan est sauvegardé séparément) et lance l'implémentation avec l'intégralité de la fenêtre disponible. Claude Code crée les fichiers, écrit le code, lance les tests, corrige les erreurs, le tout de manière autonome.
+
+**Phase 4 : Vérifier et committer.** Inspecter les modifications via `git diff`. Lancer manuellement les outils de vérification si les hooks n'ont pas tout couvert :
+
+```bash
+php bin/console lint:container
+php vendor/bin/phpstan analyse
+php vendor/bin/phpunit
+```
+
+Si tout est vert, committer.
+
+### Gestion du contexte
+
+La fenêtre de contexte est la **ressource critique** de tout le workflow. Quelques règles :
+
+La commande `/clear` vide la fenêtre de contexte. L'utiliser **systématiquement** entre les tâches. Ne pas enchaîner feature sur feature dans la même session.
+
+La commande `/compact` compresse le contenu de la fenêtre en conservant les éléments essentiels. Utile en milieu de tâche si le contexte se remplit. Les fichiers AGENTS.md survivent à la compaction (ils sont relus depuis le disque).
+
+Si les réponses de Claude Code deviennent génériques, si des décisions précédentes sont oubliées, si la cohérence architecturale se dégrade : **quitter la session (`/quit`) et en relancer une nouvelle**. C'est plus efficace que de tenter de sauver un contexte dégradé.
+
+> **Encadré : pour celles et ceux qui viennent de Copilot ou Cursor**
+>
+> Le concept de fenêtre de contexte n'existe pas de la même façon dans Copilot (qui travaille sur des snippets courts) ou Cursor (qui gère le contexte de manière plus transparente). Dans Claude Code, la gestion du contexte est **manuelle et explicite**. C'est une contrainte, mais aussi un levier : en vidant le contexte après la planification, l'implémentation bénéficie de la capacité maximale. C'est ce qui permet à Claude Code de gérer des tâches beaucoup plus ambitieuses que l'autocomplétion.
+
+---
+
+## Étape 10 : Configurer les sous-agents et Agent Teams
+
+### Les sous-agents
+
+Claude Code peut lancer des copies de lui-même pour paralléliser le travail. Chaque sous-agent utilise sa propre fenêtre de contexte, préservant celle de la tâche principale. Pour forcer la parallélisation, l'indiquer dans le prompt :
+
+```
+Implémente ces trois éléments en parallèle avec des sous-agents :
+1. La classe Message OrderPlacedNotification
+2. Le handler OrderPlacedNotificationHandler
+3. Le test fonctionnel OrderPlacedNotificationHandlerTest
+```
+
+Des sous-agents personnalisés peuvent être définis dans `.claude/agents/`. Pour les projets PHP/Symfony, le paquet [atournayre/claude-agents](https://github.com/atournayre/claude-agents) fournit des agents spécialisés (architecture, PHPStan, Doctrine, DDD) installables via Composer :
+
+```bash
+composer require --dev atournayre/claude-agents
+```
+
+### Les Agent Teams (expérimental)
+
+Si la variable `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` est activée dans le settings.json (c'est le cas dans la configuration fournie à l'étape 5), les commandes de coordination d'équipe sont disponibles.
+
+Pour lancer une équipe sur une tâche complexe, activer le mode Delegate via **Shift+Tab** en session lead :
+
+```
+Crée une équipe de 3 agents pour implémenter le système de notifications.
+Agent 1 : le modèle de données et les entités Doctrine
+Agent 2 : les handlers Messenger et la logique métier
+Agent 3 : les templates email Twig et les tests fonctionnels
+```
+
+**Limitations actuelles à connaître :** pas de reprise de session, un seul team par session, conflits possibles si deux agents modifient le même fichier, coût en tokens multiplié par le nombre d'agents. Utiliser les Agent Teams pour des tâches clairement parallélisables avec peu de dépendances entre elles.
+
+---
+
+## Étape 11 : Intégrer Symfony AI Mate (optionnel)
+
+[Symfony AI Mate](https://symfony.com/doc/current/ai/components/mate.html) est le composant MCP officiel qui permet à Claude Code d'interagir avec l'application Symfony en cours d'exécution (introspection du container de services, analyse des logs Monolog).
+
+### Installation
+
+```bash
+composer require symfony/ai-mate
+```
+
+### Intégration avec Claude Code
+
+```bash
+claude mcp add mate $(pwd)/vendor/bin/mate serve --scope local
+```
+
+Vérifier la connexion :
+
+```bash
+claude mcp list
+```
+
+La sortie doit afficher `mate` avec le statut `Connected`.
+
+Mate permet ensuite à Claude Code de poser des questions comme « quels services sont injectés dans OrderController ? » ou « quels sont les derniers logs d'erreur ? » en interrogeant directement l'application, pas en devinant à partir du code source.
+
+---
+
+## Récapitulatif : la checklist complète
+
+Voici la séquence complète dans l'ordre :
+
+**(1)** Installer Claude Code via npm et se connecter au compte Anthropic.
+
+**(2)** Installer le plugin JetBrains ou VS Code.
+
+**(3)** Installer Intelephense via npm (`npm install -g intelephense`).
+
+**(4)** Créer le fichier `AGENTS.md` à la racine du projet avec les conventions Symfony (template fourni à l'étape 3). Le versionner dans Git.
+
+**(5)** Ajouter le second marketplace Anthropic et installer les six plugins (php-lsp, context7, code-review, code-simplifier, security-guidance, playwright).
+
+**(6)** Créer le fichier `~/.claude/settings.json` avec les permissions, plugins et hooks (configuration complète fournie aux étapes 5 et 6).
+
+**(7)** Installer les AI Skills Symfony UX si le projet utilise Stimulus, Turbo ou LiveComponent (étape 7).
+
+**(8)** Sélectionner Opus 4.6 en effort High pour la planification, Sonnet 4.6 pour l'implémentation.
+
+**(9)** Adopter le workflow Plan : planifier avec Shift+Tab, valider, clear context, implémenter, vérifier, committer.
+
+**(10)** Utiliser `/clear` entre chaque tâche. Quitter et relancer si le contexte se dégrade.
+
+**(11)** Optionnel : installer Symfony AI Mate pour l'introspection de l'application.
+
+---
+
+## Ressources
+
+### Documentation officielle
+
+- [Claude Code : Quickstart](https://code.claude.com/docs/en/quickstart)
+- [Claude Code : Best Practices](https://code.claude.com/docs/en/best-practices)
+- [Claude Code : Memory (CLAUDE.md)](https://code.claude.com/docs/en/memory)
+- [Claude Code : Plugins](https://code.claude.com/docs/en/plugins) et [Discover plugins](https://code.claude.com/docs/en/discover-plugins)
+- [Claude Code : Sub-agents](https://code.claude.com/docs/en/sub-agents) et [Agent Teams](https://code.claude.com/docs/en/agent-teams)
+- [Claude Code : Hooks Guide](https://code.claude.com/docs/en/hooks-guide)
+- [Using CLAUDE.md files](https://claude.com/blog/using-claude-md-files)
+
+### Fichiers de configuration de référence
+
+- [AGENTS.md d'EasyAdmin](https://github.com/EasyCorp/EasyAdminBundle/blob/4.x/AGENTS.md) (le modèle dont s'inspirer)
+- [CLAUDE.md de Symfony AI](https://github.com/symfony/ai/blob/main/CLAUDE.md) et [AGENTS.md de Symfony AI](https://github.com/symfony/ai/blob/main/AGENTS.md)
+- [CLAUDE.md de la démo Symfony AI](https://github.com/symfony/ai-demo/blob/main/CLAUDE.md)
+
+### Plugins et Skills
+
+- [php-lsp (Intelephense)](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/php-lsp)
+- [Context7](https://context7.com/) ([intégration Claude Code](https://context7.com/docs/clients/claude-code), [GitHub](https://github.com/upstash/context7))
+- [code-review](https://claude.com/plugins/code-review), [code-simplifier](https://claude.com/plugins/code-simplifier), [security-guidance](https://claude.com/plugins/security-guidance), [Playwright](https://claude.com/plugins/playwright)
+- [Skills Symfony UX](https://github.com/smnandre/symfony-ux-skills) par Simon André
+- [superpowers-symfony](https://github.com/MakFly/superpowers-symfony) par MakFly (49 skills Symfony)
+- [atournayre/claude-agents](https://github.com/atournayre/claude-agents) (agents PHP spécialisés)
+- [Spécification SKILL.md](https://www.mdskills.ai/specs/skill-md)
+
+### Intégrations Symfony AI
+
+- [Symfony AI Mate](https://symfony.com/doc/current/ai/components/mate.html) ([intégration](https://symfony.com/doc/current/ai/components/mate/integration.html))
+- [Symfony AI Documentation](https://symfony.com/doc/current/ai/index.html)
+- [Dépôt GitHub Symfony AI](https://github.com/symfony/ai)
+
+### Article compagnon
+
+- [Quand Symfony apprend à parler aux agents IA](/blog/2026/claude-code-symfony-ecosysteme) (elegartech.fr)
+- [Claude Code for Symfony and PHP: The Setup That Actually Works](https://dev.to/javiereguiluz/claude-code-for-symfony-and-php-the-setup-that-actually-works-1che) par Javier Eguiluz (l'article source)
