@@ -1,0 +1,278 @@
+---
+title: "Rust 1.94 + devenv 2.0 + ClickHouse en Rust : la semaine qui confirme Rust comme langage système incontournable"
+description: "Rust 1.94, devenv 2.0 réécrit en Rust, retour de ClickHouse sur l'intégration Rust/C++ : trois annonces convergentes qui confirment un basculement structurel."
+date: 2026-03-08
+categories: ["Développement", "Analyses"]
+tags: ["Rust", "ClickHouse", "devenv", "Nix", "RISC-V"]
+author: admin
+draft: false
+featured: false
+---
+
+**Nouvelle version du langage, réécriture d'un outil Nix majeur en Rust/C FFI, retour d'expérience sans filtre de ClickHouse sur l'intégration de Rust dans 1,5 million de lignes C++ : trois annonces convergentes qui dessinent un basculement. Rust n'est plus un langage prometteur, c'est le nouveau socle système.**
+
+---
+
+En l'espace de quelques jours, trois événements ont cristallisé ce que les indicateurs laissaient entrevoir depuis des mois. La publication de Rust 1.94.0 avec son lot de stabilisations matérielles (AVX-512 FP16, NEON FP16, 29 fonctionnalités RISC-V), la sortie de devenv 2.0 dont le backend Nix a été entièrement réécrit via une couche FFI en Rust et en C, et le partage par ClickHouse de son expérience concrète d'intégration de Rust dans un codebase C++ massif. En toile de fond : une enquête State of Rust 2025 montrant que 45,5 % des organisations utilisent désormais Rust en production pour des tâches non triviales, et des mandats gouvernementaux (Maison Blanche, CISA, NSA, DARPA) qui transforment la sûreté mémoire en exigence institutionnelle. Décryptage d'un moment charnière.
+
+## Rust 1.94.0 : une version discrète mais stratégiquement dense
+
+Portée par 234 contributeurs, la version 1.94.0 de Rust ne constitue pas un changement d'édition majeure. Son contenu révèle pourtant la manière dont le langage comble méthodiquement ses lacunes en matière de support matériel, d'ergonomie et de flexibilité de son système de build.
+
+### `array_windows` : l'itération à taille fixe, enfin stabilisée
+
+L'ajout le plus visible pour les développeurs est **`array_windows`**, une nouvelle méthode sur les slices qui fournit un itérateur à fenêtre glissante de taille fixe. Là où la méthode existante `.windows(n)` retourne des sous-tableaux de taille dynamique, `array_windows::<N>()` produit des références `&[T; N]` dont la longueur est connue à la compilation. Le compilateur peut ainsi éliminer les vérifications de bornes à l'exécution et permettre une déstructuration naturelle dans les closures.
+
+L'exemple fourni dans le billet officiel illustre le gain d'ergonomie :
+
+```rust
+fn has_abba(s: &str) -> bool {
+    s.as_bytes()
+        .array_windows()
+        .any(|[a1, b1, b2, a2]| (a1 != b1) && (a1 == a2) && (b1 == b2))
+}
+```
+
+Le compilateur infère `N = 4` à partir du motif de déstructuration. Un gain modeste en apparence, mais qui élimine le contournement `let [a, b, c] = window else { unreachable!(); }` auquel les développeurs recouraient jusqu'ici.
+
+### AVX-512 FP16 et NEON FP16 : Rust parle désormais aux unités de calcul en demi-précision
+
+Pour le calcul haute performance, cette version stabilise les **intrinsics AVX-512 FP16** (x86) et **NEON FP16** (AArch64). Ces instructions exposent les opérations SIMD en virgule flottante demi-précision, capables de traiter jusqu'à 32 valeurs FP16 par instruction sur du matériel AVX-512. L'intérêt est direct pour les charges de travail d'inférence en intelligence artificielle, où le calcul en FP16 offre un compromis débit/précision largement exploité en production. Les processeurs Intel Sapphire Rapids Xeon et les futurs AMD Zen 6 supportent nativement AVX-512 FP16, tandis que la stabilisation AArch64 NEON sert le marché croissant des serveurs ARM (AWS Graviton, Ampere Altra) ainsi que les déploiements mobiles et embarqués.
+
+### Cargo passe à TOML v1.1 et gagne la clé `include`
+
+Côté système de build, **Cargo analyse désormais TOML v1.1**, apportant les tables en ligne multi-lignes avec virgule finale, de nouvelles séquences d'échappement (`\xHH`, `\e`) et les secondes optionnelles dans les littéraux temporels. Le bénéfice pratique est la lisibilité accrue des fichiers `Cargo.toml` : les spécifications de dépendances en ligne peuvent enfin s'étendre sur plusieurs lignes sans recourir à la syntaxe complète des tables. Cargo réécrit automatiquement les manifestes lors de la publication pour assurer la rétrocompatibilité.
+
+En parallèle, la nouvelle **clé `include` dans `.cargo/config.toml`** permet de charger des fichiers de configuration additionnels, avec support des inclusions optionnelles. Cette fonctionnalité répond à un besoin ancien : le partage de paramètres de développement entre projets d'un monorepo ou entre membres d'une équipe, sans duplication de configuration.
+
+### 29 fonctionnalités RISC-V stabilisées : un positionnement stratégique
+
+Le changement probablement le plus significatif sur le plan stratégique est la stabilisation de **29 fonctionnalités cibles RISC-V**, couvrant une large partie des profils RVA22U64 et RVA23U64. Dix-neuf d'entre elles supportent la détection à l'exécution via `std::arch::is_riscv_feature_detected!()`. Les fonctionnalités stabilisées incluent les extensions de cryptographie scalaire (Zk, Zkn, Zknd, Zkne, Zknh, Zkr, Zks, Zksed, Zksh, Zkt) ainsi que les extensions de manipulation de bits. Une nouvelle cible de niveau 3, `riscv64im-unknown-none-elf`, a également été ajoutée.
+
+> **Encadré : pourquoi RISC-V compte**
+>
+> Pour les organisations évaluant RISC-V dans une logique d'embarqué, d'edge computing ou de souveraineté sur les architectures de puces, cette stabilisation positionne Rust comme **le premier langage système majeur disposant d'un support RISC-V large et stable** au-delà du jeu d'instructions de base. C'est un signal fort pour les feuilles de route industrielles européennes.
+
+Parmi les autres ajouts notables : les constantes d'Euler-Mascheroni (`f64::consts::EULER_GAMMA`) et du nombre d'or (`f64::consts::GOLDEN_RATIO`) dans la bibliothèque standard, la stabilisation de `mul_add` en contexte `const` pour les types flottants, et une migration interne majeure vers la bibliothèque `annotate-snippets` pour les diagnostics du compilateur (testée sur nightly pendant un mois avec seulement quatre problèmes mineurs avant promotion en stable).
+
+---
+
+## devenv 2.0 : quand Rust reconstruit l'outillage Nix
+
+Publiée le même jour que Rust 1.94.0, la version 2.0 de devenv illustre une autre facette de l'expansion Rust : la réécriture des infrastructures de développement. devenv est un outil d'environnements de développement bâti sur Nix, créé par Cachix et dirigé par Domen Kožar. Son interface déclarative (`languages.rust.enable = true; services.postgres.enable = true;`) abstrait la courbe d'apprentissage notoirement raide de Nix. Avec **6 400 étoiles GitHub** et 250 contributeurs, devenv supporte plus de 50 langages et 30 services prêts à l'emploi.
+
+### Du fork de processus à l'appel FFI direct
+
+Le changement architectural central de la version 2.0 est le remplacement des invocations CLI de Nix par un **backend C FFI** construit sur `nix-bindings-rust`. Auparavant, chaque commande devenv lançait cinq processus Nix ou plus, l'option la plus pragmatique au moment de la création de l'outil, mais fondamentalement lente. Désormais, devenv appelle l'évaluateur et le store Nix directement à travers l'API C, en évaluant un attribut à la fois avec un **cache d'évaluation incrémentale**. Chaque attribut évalué est mis en cache individuellement, avec les fichiers et variables d'environnement qu'il a consultés. Quand une seule ligne de configuration change, seuls les attributs dépendants sont réévalués. Tout le reste provient du cache.
+
+### Des performances qui changent l'expérience développeur
+
+L'impact sur les performances est substantiel. Les premières constructions s'achèvent en environ **4,8 secondes**, tandis que les activations depuis le cache tombent à **47 millisecondes**, bien en dessous du seuil de 100 ms où les développeurs perçoivent une opération comme instantanée. L'ensemble s'accompagne d'une interface terminal en temps réel montrant la progression structurée de l'évaluation, d'un gestionnaire de processus natif en Rust remplaçant la dépendance précédente à process-compose (avec allocation de ports, sondes de disponibilité, activation par socket et ordonnancement des dépendances), et d'un rechargement natif du shell qui garde le terminal interactif pendant les reconstructions au lieu de le geler pendant 30 secondes.
+
+L'équipe devenv porte actuellement des patchs sur l'API C de Nix, décrits comme « entièrement upstreamables ». Le projet avait annoncé en octobre 2024 son intention de basculer vers Tvix (une réimplémentation complète de Nix en Rust, renommée « Snix »), mais ce backend « n'est pas encore fonctionnel ». L'approche FFI en C a été le chemin pragmatique livré en 2.0. La base de code est désormais composée à **75,3 % de Rust** et 22,7 % de Nix.
+
+> **Encadré : un motif récurrent**
+>
+> devenv 2.0 illustre un schéma récurrent dans l'écosystème des outils de développement : la réécriture d'outillages Python ou shell en Rust pour gagner en vitesse et en fiabilité. La trajectoire rappelle ripgrep, fd, bat, uv (packaging Python) et bien d'autres. Pour les organisations gérant des environnements de développement reproductibles à grande échelle, le temps d'activation en cache inférieur à 100 ms et le modèle de configuration déclaratif offrent une alternative sérieuse aux workflows basés sur Docker.
+
+---
+
+## ClickHouse et Rust : le retour d'expérience le plus honnête de l'industrie
+
+ClickHouse, la base de données analytique colonnaire open source forte d'un **codebase C++ de 1,5 million de lignes**, offre l'un des retours d'expérience les plus détaillés et les plus francs sur l'adoption incrémentale de Rust dans un grand projet C++. Le CTO et cofondateur Alexey Milovidov a présenté cette expérience lors de P99 Conf (octobre 2025) et au FOSDEM 2026 (2 février 2026), complétée par deux billets de blog qui forment ensemble un guide pragmatique pour les organisations envisageant un parcours similaire.
+
+### 98 % de C++ restent : l'anti-réécriture
+
+Le cadrage est essentiel : **environ 98 % de ClickHouse reste en C++**. Rust n'a pas été utilisé pour une réécriture mais pour des composants spécifiques où les bibliothèques Rust étaient supérieures ou constituaient la seule option maintenue. Quatre intégrations racontent l'histoire.
+
+**BLAKE3** (fonction de hachage cryptographique) a atteint plus de 2x le débit de SHA-256 lors de son intégration via FFI Rust en 2022, mais a finalement été remplacé par une implémentation C++ lorsque l'équipe a découvert que BLAKE3 était déjà disponible dans LLVM, sans différence de performance notable.
+
+**Skim** (historique interactif en CLI) a introduit un bug de la bibliothèque Rust provoquant des crashs.
+
+**PRQL** (dialecte de requêtes pipelines) a immédiatement déclenché un crash serveur via un panic lorsqu'il a été soumis au fuzzer de ClickHouse, et a généré des noms de symboles approchant **85 Ko** (grimpant ensuite à près de 1 Mo) en raison des mécanismes internes des combinateurs d'analyseurs syntaxiques.
+
+### Delta Kernel RS : le cas d'usage qui justifie tout
+
+L'intégration la plus significative et la plus pratique concerne **Delta Kernel RS**, la bibliothèque Rust officielle de Databricks pour le support du format Delta Lake. Aucune bonne bibliothèque C++ n'existait pour Delta Lake, et en écrire une en C++ aurait été, selon les mots de Milovidov, « inutile ». ClickHouse a contribué des corrections de bugs et des fonctionnalités à la bibliothèque. Ce schéma (adopter Rust là où l'écosystème Rust offre la meilleure ou la seule bibliothèque viable) est probablement le modèle le plus reproductible pour les grandes bases de code C++.
+
+### Les défis concrets de l'intégration
+
+La liste de défis dressée par Milovidov est instructive pour toute organisation évaluant l'intégration de Rust. Les bibliothèques Rust « paniquent trop » pour une application serveur multi-tenants. Le CI de ClickHouse « a trouvé des bugs dans chaque bibliothèque Rust utilisée ». Le nombre de dépendances a explosé, passant de 156 dépendances C++ à **672 crates Rust supplémentaires**. L'intégration au système de build a nécessité de résoudre une seconde fois le problème des builds hermétiques et reproductibles (ClickHouse interdit l'accès internet pendant les builds). Thread Sanitizer a dû être désactivé pour le code Rust, et Memory Sanitizer a requis l'épinglage sur la toolchain nightly de Rust. La compilation croisée pour plusieurs plateformes a signifié « tout refaire deux fois ».
+
+Le bilan global reste néanmoins positif : Rust est qualifié de « grand langage » par le CTO de ClickHouse, tout en insistant sur le fait que l'objectif n'était « pas de réécrire ClickHouse en Rust, ce qui aurait été une perte de temps ». L'approche pragmatique, bibliothèque par bibliothèque, a réduit le risque tout en extrayant de la valeur là où l'écosystème Rust était réellement supérieur.
+
+---
+
+## Enquête State of Rust 2025 : le franchissement du seuil entreprise
+
+Trois jours avant ces publications, le projet Rust a publié les résultats de la **10e enquête annuelle State of Rust** (2 mars 2026), basée sur 7 156 réponses complètes collectées entre novembre et décembre 2025. Les résultats dressent le portrait d'un langage franchissant le seuil de l'adoption enthousiaste pour entrer dans l'usage industriel courant.
+
+> **Chiffres clés de l'enquête 2025**
+>
+> **55,1 %** des répondants utilisent Rust quotidiennement ou presque (contre 53,4 % en 2024).
+>
+> **56,8 %** se déclarent productifs en Rust (contre 53,5 % l'année précédente).
+>
+> **45,5 %** des organisations utilisent Rust pour des tâches de production non triviales, en hausse par rapport à 38,7 % en 2023 (soit **+6,8 points** en deux ans).
+>
+> **82,2 %** de taux d'admiration pour la 9e année consécutive selon l'enquête interne Rust.
+>
+> **2,27 millions** de développeurs ont utilisé Rust au cours des douze derniers mois (estimation JetBrains).
+
+Interrogées sur les raisons du choix de Rust, les organisations citent la construction de logiciels corrects et exempts de bugs (87,1 %), les caractéristiques de performance (84,5 %) et les propriétés de sécurité et de sûreté (74,8 %).
+
+L'ampleur de l'écosystème est désormais considérable. Le registre crates.io indexe plus de **210 000 crates**, avec des téléchargements croissant à un rythme de **2,2x par an** et un record journalier de 507,6 millions de téléchargements (davantage que l'ensemble des téléchargements des 40 premiers mois suivant Rust 1.0). Le trafic en semaine est 2,8x supérieur à celui du week-end, signe d'un usage massivement professionnel.
+
+### Les points de friction persistants
+
+Les temps de compilation restent l'obstacle de productivité le plus cité (environ 27 % des répondants), suivis par l'usage disque élevé des artefacts de build. L'expérience de débogage, bien qu'améliorée, reste en retrait par rapport aux écosystèmes C++ et Java. L'anxiété liée à la complexité persiste : **41,6 %** des répondants s'inquiètent que le langage devienne trop complexe, et 38,4 % que les développeurs et mainteneurs ne soient pas suffisamment soutenus (une préoccupation en hausse par rapport à 35,4 % en 2024). L'enquête a également capté un glissement vers les outils LLM/IA pour l'apprentissage de Rust, avec une participation aux forums communautaires en baisse d'environ trois points.
+
+---
+
+## Les mandats gouvernementaux et l'adoption à grande échelle poussent la sûreté mémoire vers le mainstream
+
+Les mérites techniques de Rust bénéficient désormais d'un soutien institutionnel explicite. Le **Bureau du Directeur national de la cybersécurité de la Maison Blanche** a publié en février 2024 son rapport « Back to the Building Blocks », appelant les fabricants de technologies à adopter des langages à sûreté mémoire et citant nommément Rust. La **CISA et la NSA ont publié conjointement des recommandations** en juin 2025, déclarant que « les vulnérabilités liées à la sûreté mémoire posent des risques sérieux pour la sécurité nationale et les infrastructures critiques » et recommandant l'adoption incrémentale de langages à sûreté mémoire. Le programme **TRACTOR** (Translating All C To Rust) de la DARPA, annoncé mi-2024, finance la recherche sur la traduction automatisée de C vers Rust à l'aide de l'IA et de l'analyse statique.
+
+Les données sous-jacentes sont sans appel. Microsoft et Google ont indépendamment rapporté qu'**environ 70 % de leurs vulnérabilités de sécurité** proviennent de problèmes de sûreté mémoire. L'équipe Android de Google a fourni les preuves les plus granulaires : après l'introduction de Rust pour le nouveau code système, les vulnérabilités de sûreté mémoire sont passées de 76 % de toutes les vulnérabilités Android en 2019 à **moins de 20 %** en 2024, avec une densité estimée de vulnérabilités dans le code Rust de **0,2 pour un million de lignes**, contre environ 1 000 pour un million de lignes en C/C++.
+
+L'adoption industrielle a atteint une échelle significative. Microsoft fait tourner du Rust dans le noyau Windows (`win32kbase_rs.sys`) et mène un programme de recherche explorant la migration automatisée C/C++ vers Rust. Le **noyau Linux** a franchi une étape en décembre 2025 lorsque le Kernel Maintainer Summit de Tokyo a retiré l'étiquette « expérimental » du support Rust, Linus Torvalds confirmant que « Rust fait véritablement partie du noyau ». AWS a mis le support Rust pour Lambda en **disponibilité générale** en novembre 2025. Le proxy HTTP Pingora de Cloudflare, entièrement écrit en Rust, traite plus d'**un trillion de requêtes par jour**.
+
+Le Safety-Critical Rust Consortium, fondé en juin 2024, s'est élargi tout au long de 2025 avec des réunions à Montréal, Londres et Utrecht. Ferrocene, le premier compilateur Rust open source certifié ISO 26262 ASIL-D et IEC 61508 SIL 4, ouvre la voie à Rust dans l'automobile, l'aérospatiale et les dispositifs médicaux. ETAS (filiale de Bosch) a officiellement adopté Rust pour ses futurs logiciels embarqués en octobre 2024, et Woven by Toyota a rejoint le consortium pour le développement de l'OS véhicule et de la conduite automatisée. Le marché du Rust automobile est projeté à **2,1 milliards de dollars d'ici 2033**, contre 428 millions en 2024.
+
+---
+
+## La France construit une position distinctive dans l'écosystème Rust
+
+L'engagement de la France avec Rust s'étend à la cybersécurité gouvernementale, la recherche industrielle, la vérification formelle académique et un écosystème de startups dynamique, formant un profil qui se distingue parmi les nations européennes.
+
+### L'ANSSI, pivot institutionnel
+
+L'ancrage institutionnel repose sur l'**ANSSI** (Agence nationale de la sécurité des systèmes d'information), qui a publié ses « Règles de programmation pour le développement d'applications sécurisées en Rust » (ANSSI-PA-074) en 2020, mises à jour en 2021. La France est ainsi l'un des rares pays disposant d'un **guide gouvernemental officiel de programmation Rust**. L'ANSSI maintient également **MLA (Multi Layer Archive)**, un format d'archive chiffrée en pur Rust avec cryptographie post-quantique, ayant fait l'objet d'une évaluation de sécurité par le CESTI Synacktiv. Pierre Chifflier, responsable du laboratoire de détection d'intrusions de l'ANSSI, a été pionnier de l'intégration Rust dans Suricata (le principal IDS/IPS open source), en écrivant des parseurs pour NTP, Kerberos et SNMP livrés dans Suricata 4.0 dès 2017.
+
+L'approche de l'ANSSI (publication de guides de programmation sécurisée dédiés tant pour C que pour Rust, contribution active de code Rust à des projets open source critiques, emploi d'experts Rust intervenant dans des conférences internationales) constitue une forme d'endossement institutionnel de fait, même en l'absence d'une directive formelle équivalente au mémo de la Maison Blanche.
+
+### Des startups françaises d'envergure mondiale
+
+Les startups françaises ont produit des projets Rust d'envergure mondiale. **Meilisearch** (Paris), moteur de recherche entièrement écrit en Rust avec plus de **56 200 étoiles GitHub**, est l'un des projets Rust les plus populaires au monde et membre de la Rust Foundation. **Zama** (Paris) a développé **TFHE-rs**, l'implémentation de chiffrement entièrement homomorphe (FHE) la plus rapide publiquement disponible, construite en pur Rust. **ZettaScale** (région parisienne) a créé **Zenoh**, un middleware de communication pour la robotique et les véhicules autonomes délivrant un débit de **51+ Gbps** à 15 us de latence, avec une API Rust-first. OVHcloud, le principal fournisseur de cloud souverain français, utilise Rust pour des outils internes dont son agent de programmation « shai ».
+
+### Défense, aérospatial et vérification formelle
+
+Dans la défense et l'aérospatial, **Airbus Defence & Space** et **Thales** ont soumis des propositions liées à Rust à l'ESA (Agence spatiale européenne). Airbus mène un projet financé par l'ESA intitulé « Using game-engine techniques and RUST to modernise on-board software » pour le traitement de charges utiles satellitaires. Thales a co-organisé un meetup Rust à Paris en juillet 2023, signalant un intérêt actif malgré sa dépendance historique à Ada/SPARK pour l'avionique critique.
+
+Le différenciateur le plus fort de la France réside peut-être dans la **recherche en vérification formelle**. L'INRIA (Institut national de recherche en sciences et technologies du numérique) héberge plusieurs projets de premier plan mondial. **Creusot** (INRIA Saclay) fournit la vérification déductive de programmes Rust à l'aide de l'assistant de preuve Why3. **Aeneas** (INRIA Paris, équipe Prosecco), développé en partenariat avec Microsoft Azure Research, génère des modèles fonctionnels purs de programmes Rust pour les prouveurs de théorèmes et est utilisé par Microsoft pour la réécriture de sa bibliothèque cryptographique SymCrypt en Rust vérifié. **Charon** fournit une infrastructure d'analyse réutilisable pour les outils Rust, et **Eurydice** transpile du Rust vers C pour les environnements patrimoniaux. **Hacspec**, développé par l'équipe Prosecco, permet de spécifier des algorithmes cryptographiques dans un sous-ensemble purement fonctionnel de Rust avec traduction vers F* pour la vérification formelle.
+
+Ces projets positionnent la France à l'intersection des méthodes formelles et de la programmation système, une niche d'importance stratégique croissante à mesure que Rust entre dans les domaines critiques pour la sûreté.
+
+### Une communauté active
+
+La communauté est vivante, avec le meetup Rust Paris organisé par Guillaume Gomez (responsable de l'équipe Rustdoc, membre de la GNOME Foundation et l'un des contributeurs les plus prolifiques de Rust), des meetups réguliers à Lyon et Lille, et la conférence **EuroRust 2025** accueillie à la Cité des Sciences et de l'Industrie à Paris avec environ 800 à 1 000 participants.
+
+---
+
+## Conclusion : la convergence signale un basculement structurel
+
+Les événements de début mars 2026 ne sont pas individuellement transformateurs, mais leur convergence désigne un basculement structurel. Les stabilisations RISC-V et FP16 de Rust 1.94.0 positionnent le langage pour les architectures matérielles émergentes. devenv 2.0 démontre que Rust n'est pas seulement le langage adopté, mais aussi le langage utilisé pour reconstruire l'outillage d'infrastructure. L'expérience de ClickHouse fournit le guide de terrain le plus honnête disponible pour les codebases C++ envisageant une adoption incrémentale de Rust, confirmant à la fois la proposition de valeur et les coûts d'ingénierie réels. Les données d'enquête montrent une adoption en entreprise accélérant au-delà du seuil des 45 % pour un usage non trivial.
+
+Trois enseignements structurants se dégagent de cette analyse. Premièrement, **l'écosystème de bibliothèques est désormais le principal moteur d'adoption de Rust** : ClickHouse a adopté Rust non par idéologie mais parce que la meilleure bibliothèque Delta Lake était écrite en Rust, et devenv l'a adopté parce que l'évaluateur Nix était le plus efficacement accessible via une couche FFI Rust/C. Deuxièmement, **les mandats gouvernementaux sur la sûreté mémoire créent une demande institutionnelle** qui dépasse les préférences individuelles des développeurs, la CISA, la NSA, la DARPA et l'ANSSI endossant ou investissant toutes explicitement dans Rust. Troisièmement, **la France occupe une position singulièrement forte** dans l'écosystème Rust, combinant l'engagement institutionnel de l'ANSSI, une recherche en vérification formelle de rang mondial à l'INRIA, des projets open source d'envergure mondiale issus de startups parisiennes, et une exploration active par les grands groupes de défense et d'aérospatial.
+
+Pour les décideurs publics et les responsables techniques évaluant leur stratégie technologique, la question n'est plus de savoir si Rust atteindra une adoption large. Elle est de savoir comment positionner les organisations pour tirer parti de la transition déjà en cours.
+
+---
+
+## Sources
+
+**Rust 1.94.0**
+
+(1) Rust Blog, « Announcing Rust 1.94.0 », 5 mars 2026.
+
+(2) Phoronix, « Rust 1.94 Released With Stable Support For AVX-512 FP16 Intrinsics, Array Windows », mars 2026.
+
+(3) GitHub, « Release Rust 1.94.0 - rust-lang/rust ».
+
+(4) GitHub, « Stabilize 28 RISC-V target features (riscv_ratified_v2) », Pull Request #145948.
+
+(5) Releases.rs, « Rust Changelogs 1.94.0 ».
+
+(6) TLDR DevOps Newsletter, « Safer GitOps, Rust 1.94, Observability Warehouse », mars 2026.
+
+**devenv 2.0**
+
+(7) devenv Blog, « devenv 2.0: A Fresh Interface to Nix », 5 mars 2026.
+
+(8) devenv, « Migrating to 2.0 ».
+
+(9) GitHub, « cachix/devenv: Fast, Declarative, Reproducible, and Composable Developer Environments using Nix ».
+
+(10) devenv Blog, « devenv is switching its Nix implementation to Tvix », octobre 2024.
+
+**ClickHouse et Rust**
+
+(11) ClickHouse Blog, « A Year of Rust in ClickHouse ».
+
+(12) ClickHouse Blog, « How to use Rust in ClickHouse: avoiding a full rewrite » (Alexey Milovidov, P99 Conf 2025).
+
+(13) The New Stack, « The 'weird' things that happened when Clickhouse replaced C++ with Rust ».
+
+(14) The New Stack, « Moving From C++ to Rust? ClickHouse Has Some Advice ».
+
+(15) FOSDEM 2026, « Clickhouse's C++ and Rust journey ».
+
+**Enquête State of Rust 2025**
+
+(16) Rust Blog, « 2025 State of Rust Survey Results », 2 mars 2026.
+
+(17) InfoWorld, « Rust developers have three big worries - survey ».
+
+(18) The New Stack, « Survey: Memory-Safe Rust Gains 45% of Enterprise Development ».
+
+(19) JetBrains Blog, « The State of Rust Ecosystem 2025 », février 2026.
+
+(20) Lib.rs, « State of the Rust/Cargo crates ecosystem ».
+
+(21) Rust Blog, « What do people love about Rust? », décembre 2025.
+
+**Mandats gouvernementaux et adoption industrielle**
+
+(22) White House ONCD, « Press Release: Future Software Should Be Memory Safe », février 2024.
+
+(23) CISA, « New Guidance Released for Reducing Memory-Related Vulnerabilities », juin 2025.
+
+(24) The Hacker News, « Google's Shift to Rust Programming Cuts Android Memory Vulnerabilities by 68% ».
+
+(25) Security Pulse, « How Rust Transformed Android Memory-Safety Vulnerabilities », novembre 2025.
+
+(26) The New Stack, « Microsoft's Bold Goal: Replace 1B Lines of C/C++ With Rust ».
+
+(27) DARPA / The Register, « DARPA suggests turning legacy C code automatically into Rust », août 2024.
+
+(28) DEVCLASS, « Rust boosted by permanent adoption for Linux kernel code », décembre 2025.
+
+(29) AWS, « AWS Lambda adds support for Rust », novembre 2025.
+
+(30) Rust Foundation, « 2025 Technology Report: Security Advancements, Ecosystem Resilience, & Strategic Partnerships ».
+
+(31) Ferrous Systems, « The New Safety-Critical Rust Consortium ».
+
+**Écosystème français**
+
+(32) ANSSI / GitHub, dépôts publics.
+
+(33) ANSSI / cyber.gouv.fr, « Les essentiels : sélection de logiciels libres ».
+
+(34) INRIA HAL, « Creusot: a Foundry for the Deductive Verification of Rust ».
+
+(35) INRIA, « Program safely in Rust with the Why3 proof assistant ».
+
+(36) INRIA HAL, « Formal Verification of Rust Programs by Functional Translation » (thèse).
+
+(37) INRIA HAL, « Hacspec: succinct, executable, verifiable specifications for high-assurance cryptography embedded in Rust ».
+
+(38) ESA, « Space hardware seeks - and finds - game-changing software » (Airbus, Thales).
+
+(39) OVHcloud / GitHub, « shai: a coding agent written in Rust ».
+
+(40) Microsoft Research, « Rewriting SymCrypt in Rust to modernize Microsoft's cryptographic library » (en partenariat avec INRIA Prosecco/Aeneas).
+
+(41) EuroRust 2025, Paris.
+
+(42) Meetup Rust Paris.
