@@ -57,10 +57,10 @@
         });
         pagefindLoaded = true;
       } catch (e) {
-        console.warn('Pagefind not available (run build first)');
+        console.warn('Pagefind not available — run "npm run build" to generate the search index');
         const container = document.getElementById('pagefind-container');
         if (container) {
-          container.innerHTML = '<p style="text-align:center;padding:2rem;color:var(--text-secondary);">Recherche non disponible en développement.</p>';
+          container.innerHTML = '<p style="text-align:center;padding:2rem;color:var(--text-secondary);">Index de recherche introuvable.<br><code style="font-size:0.85em;">npm run build</code> pour le générer.</p>';
         }
       }
     }
