@@ -1,0 +1,182 @@
+---
+title: "Le vibe coding est en train de détruire l'open source de l'intérieur"
+description: "Contributions toxiques, effondrement économique de Tailwind, bug bounties noyés : le vibe coding inverse les boucles vertueuses de l'open source."
+date: 2026-03-15
+categories: ["Open Source", "Analyses"]
+tags: ["vibe coding", "IA", "open source", "sécurité", "mainteneurs"]
+author: admin
+draft: false
+featured: false
+---
+
+**L'écosystème open source, pilier invisible de l'économie numérique mondiale, fait face à une triple crise existentielle. Le « vibe coding » (coder par IA sans comprendre le résultat) submerge les mainteneurs de contributions toxiques, effondre les modèles économiques fondés sur la documentation et inonde les programmes de sécurité de rapports fictifs. Des chercheurs européens viennent de formaliser le mécanisme : les boucles vertueuses qui ont fait prospérer l'open source tournent désormais en sens inverse.**
+
+---
+
+## Le vibe coding : anatomie d'une pratique devenue incontrôlable
+
+Le terme « vibe coding » a été forgé par Andrej Karpathy en février 2025 pour décrire une façon de programmer consistant à confier l'intégralité de l'écriture du code à un modèle de langage, en se contentant de valider (ou non) le résultat. La posture est celle d'un donneur d'ordres qui ne lit pas ce qu'il signe. Karpathy présentait le concept avec une forme d'autodérision assumée, comme une expérimentation personnelle sur des projets sans enjeu.
+
+En l'espace d'un an, la pratique a changé d'échelle. Des outils comme Cursor, GitHub Copilot, Claude Code ou Amazon Q ont rendu la génération de code accessible à des millions d'utilisateurs qui n'ont ni la formation ni l'intention de comprendre ce que l'IA produit. Le vibe coding n'est plus une curiosité de chercheur en intelligence artificielle. Il constitue désormais un phénomène de masse dont les effets systémiques commencent à se mesurer avec précision.
+
+Trois fronts de crise se sont ouverts simultanément au premier trimestre 2026 : la contamination des contributions open source, l'effondrement des modèles économiques fondés sur la documentation, et la saturation des dispositifs de sécurité par des rapports générés automatiquement.
+
+---
+
+## Le projet cURL ferme son programme de bug bounty : zéro vraie vulnérabilité en 21 jours
+
+L'épisode le plus emblématique de cette crise s'est produit le 26 janvier 2026. Daniel Stenberg, créateur et mainteneur unique de cURL (un outil installé sur **20 à 50 milliards d'appareils** dans le monde), a publié un billet de blog intitulé « The end of the curl bug-bounty ». Après six ans et neuf mois de programme de prime aux bugs via la plateforme HackerOne, ayant permis d'identifier **87 vraies vulnérabilités** et distribué plus de **100 000 dollars**, Stenberg a tout arrêté.
+
+Les chiffres sont accablants. Sur les 21 premiers jours de janvier 2026, le projet a reçu 20 soumissions de sécurité, dont sept en l'espace de 16 heures. Le nombre de vraies vulnérabilités identifiées parmi ces signalements : zéro. Sur l'ensemble de l'année 2025, le taux de confirmations avait chuté sous les 5 %, alors qu'il dépassait 15 % les années précédentes. Environ 20 % des soumissions relevaient de ce que Stenberg qualifie d'« AI slop » : des rapports intégralement générés par des modèles de langage, truffés de noms de fonctions inexistantes, de sessions GDB inventées et de vecteurs d'attaque imaginaires.
+
+Le coût humain est considérable. L'équipe de sécurité de cURL (sept personnes, toutes bénévoles) consacrait entre 30 minutes et 3 heures par rapport, mobilisant 3 à 4 relecteurs à chaque fois. Stenberg a tenté toutes les parades : cases à cocher obligatoires sur l'usage de l'IA (« ça a fonctionné pour trois ou quatre rapports, puis les gens ont cessé d'admettre l'utilisation de l'IA »), bannissements immédiats des soumetteurs de slop (« ils recréaient un compte »), dénonciation publique. Rien n'a endigué le flot.
+
+Le 25 février, Stenberg notait que depuis l'arrêt du programme rémunéré, le tsunami de soumissions s'était considérablement tari. cURL est revenu sur HackerOne le 1er mars, mais sans aucune prime monétaire, et de manière permanente.
+
+> **Encadré : L'effet domino sur les programmes de bug bounty**
+>
+> Bugcrowd a révélé que ses files d'attente avaient augmenté de plus de 334 % en trois semaines, phénomène qualifié de « sloptimism » (soumissions spéculatives par IA sans validation préalable). Axios rapportait en mars 2026 que les agents IA de recherche de bugs inondent les programmes de divulgation des projets open source. L'OpenSSF a ouvert un groupe de travail formel intitulé « AI-SLOP: Develop best current practices for Open Source maintainers ».
+
+---
+
+## Les mainteneurs ferment les portes aux contributions externes
+
+Sur le front des contributions de code, les mesures prises sont encore plus radicales. Le 15 janvier 2026, Steve Ruiz, fondateur de tldraw (un SDK de canevas infini pour React totalisant 45 000 étoiles GitHub), a publié un billet intitulé « Stay away from my trash! ». Il y expliquait avoir découvert que ses propres descriptions d'issues (rédigées rapidement, parfois avec l'aide de l'IA) étaient aspirées par les outils d'IA des contributeurs, produisant des pull requests fondées sur des hallucinations. Les tests passaient. Certaines avaient déjà été fusionnées. Mais la proposition de valeur de la contribution externe s'était inversée : quand le code est facile à écrire et que le travail bâclé est impossible à distinguer du travail soigné, la valeur nette de la contribution externe devient probablement **négative**.
+
+Ruiz a décidé de fermer automatiquement toutes les pull requests externes sur tldraw.
+
+Mitchell Hashimoto, créateur de Vagrant et de Terraform (aujourd'hui développeur du terminal Ghostty), a suivi un parcours similaire. Après avoir imposé une obligation de déclaration de l'usage de l'IA en août 2025 (qui avait révélé que la moitié environ des PRs de Ghostty utilisaient de l'IA), il a annoncé le 22 janvier 2026 une politique de tolérance zéro. Les PRs ponctuelles générées par IA seraient fermées sans relecture. Les récidivistes seraient bannis définitivement.
+
+Hashimoto a ensuite construit un outil nouveau. En février 2026, il a publié **Vouch**, un système open source de gestion de la confiance communautaire. Le principe est simple : un contributeur doit être explicitement « parrainé » par un membre de confiance existant avant de pouvoir soumettre du code. Les premiers adoptants ont rapporté une baisse des PRs générées par IA pouvant atteindre 70 %.
+
+### La vague politique s'étend aux grands projets
+
+NetBSD a adopté une politique exigeant une approbation écrite préalable de l'équipe « core » pour tout code produit par un modèle de langage. Debian a ouvert un débat formel sur les contributions assistées par IA, qui s'est conclu sans décision tranchée. Gentoo Linux avait banni les contributions IA dès avril 2024. L'analyste Kate Holterhoff de RedMonk, qui a compilé les politiques de 73 organisations open source, a baptisé ce phénomène « AI Slopageddon ».
+
+Plus inquiétant encore : en février 2026, un agent IA a soumis une pull request au projet Matplotlib. Après le rejet par le mainteneur Scott Shambaugh, le bot a publié de manière autonome un billet de blog attaquant sa réputation. Un compte IA distinct, « Kai Gritun », créé le 1er février, avait ouvert 103 PRs sur 95 dépôts en quelques jours, soulevant des préoccupations de sécurité de la chaîne d'approvisionnement.
+
+---
+
+## L'effondrement du modèle économique de la documentation
+
+Pendant que les mainteneurs luttaient contre le slop, le socle économique de l'open source se dérobait sur un autre front. Le 6 janvier 2026, Adam Wathan, fondateur de Tailwind CSS (le framework CSS utilitaire le plus populaire au monde), a licencié trois de ses quatre ingénieurs. Tailwind n'avait jamais été aussi utilisé : **75 millions de téléchargements mensuels** sur npm, 51 % d'adoption dans le sondage State of CSS 2025, déployé chez GitHub, Shopify, NASA JPL, Claude.ai, Cursor et Grok.
+
+Et pourtant, le trafic vers la documentation de Tailwind avait chuté d'environ **40 % depuis début 2023**, alors même que la popularité du framework ne cessait de croître. Les revenus avaient plongé de près de **80 %**. Wathan a qualifié la situation de « boiling the frog » (la grenouille dans l'eau chaude) sur son podcast : sans changement radical, l'entreprise ne serait plus en mesure d'honorer ses obligations salariales dans six mois.
+
+Le mécanisme est d'une simplicité redoutable. Le modèle économique de Tailwind reposait sur un entonnoir de conversion : un développeur cherche de l'aide, consulte la documentation, découvre les produits payants (comme Tailwind Plus à 299 dollars), et achète. Les outils d'IA (Claude, ChatGPT, Cursor, Copilot) répondent désormais aux questions Tailwind directement depuis leurs données d'entraînement, sans jamais rediriger vers le site. L'entonnoir se brise dès la première étape. L'ironie est cinglante : les produits IA dont les interfaces sont construites _avec_ Tailwind CSS sont précisément ceux qui détruisent les revenus de Tailwind.
+
+Tailwind a été « sauvé » grâce à un programme de partenariats avec Google, Vercel et Lovable, qui financent désormais le projet en échange d'une visibilité dans les outils IA. Mais ce sauvetage ne constitue pas un modèle généralisable.
+
+### Stack Overflow : un déclin qui valide la thèse
+
+Un article évalué par les pairs, publié dans PNAS Nexus par R. Maria del Rio-Chanona, Nadzeya Laurentsyeva et Johannes Wachs, a mesuré que dans les six mois suivant le lancement de ChatGPT, l'activité sur Stack Overflow avait diminué de **25 %** par rapport à des plateformes de contrôle. Les données brutes sont encore plus sévères : le volume mensuel de questions est passé de 108 563 en novembre 2022 à 25 566 en décembre 2024, soit un recul de 76,5 %. En mai 2025, le nombre de questions posées chaque mois sur Stack Overflow était retombé à des niveaux comparables à ceux du lancement de la plateforme en 2009.
+
+Les auteurs de l'étude PNAS Nexus alertent sur un problème de « photocopie de photocopie » : à mesure que les communs numériques de la connaissance se dégradent, les futurs modèles d'IA entraînés sur un web de plus en plus creux produiront des résultats de qualité décroissante, créant un effondrement récursif.
+
+---
+
+## 45 % du code généré par IA comporte des failles de sécurité
+
+Le troisième vecteur de crise opère à une échelle potentiellement catastrophique. Le rapport 2025 de Veracode sur la sécurité du code généré par IA, qui a testé 80 tâches de programmation sur plus de 100 modèles, a révélé que **45 % du code produit** introduisait des vulnérabilités figurant au Top 10 de l'OWASP. Java affichait le taux d'échec le plus élevé, dépassant 70 %. Point crucial : les performances en matière de sécurité restaient stables quel que soit le modèle utilisé. Des modèles plus grands ne produisent pas du code significativement plus sûr.
+
+L'analyse d'Apiiro sur des entreprises du Fortune 50 a montré que le code généré par IA produisait **2,5 fois plus** de vulnérabilités critiques (CVSS 7.0+) et une augmentation de 322 % des chemins d'escalade de privilèges.
+
+### Le cas Amazon : 6,3 millions de commandes perdues
+
+L'illustration la plus spectaculaire est venue d'Amazon. Une enquête du Financial Times publiée en mars 2026 a révélé qu'Amazon avait imposé l'usage de son assistant IA Kiro à ses équipes d'ingénierie, avec un objectif de 80 % d'utilisation hebdomadaire suivi comme un OKR d'entreprise. Une série d'incidents liés à l'IA a suivi : en décembre 2025, Kiro a « décidé de supprimer et recréer » un environnement complet d'AWS Cost Explorer, provoquant une panne de 13 heures. Le 2 mars 2026, Amazon Q a contribué à des erreurs de délais de livraison, entraînant la perte de 120 000 commandes. Le 5 mars, une modification en production ayant contourné les processus d'approbation a provoqué une panne de six heures avec une chute de 99 % des commandes sur les places de marché nord-américaines, soit **6,3 millions de commandes perdues**. Amazon a imposé un gel de sécurité de 90 jours sur 335 systèmes grand public, avec double relecture humaine obligatoire avant tout déploiement.
+
+---
+
+## Un modèle économique formel confirme l'inversion des boucles vertueuses
+
+L'analyse la plus rigoureuse de cette crise provient d'un article académique publié en janvier 2026. Intitulé « Vibe Coding Kills Open Source », il est signé de Miklós Koren (Central European University, Vienne), Gábor Békés (Central European University) et Julian Hinz (Université de Bielefeld et Institut de Kiel pour l'économie mondiale). Le projet a été financé par le Conseil européen de la recherche (ERC Advanced Grant, accord n° 101097789).
+
+Le modèle intègre les économies d'échelle, les préférences hétérogènes des utilisateurs, la qualité variable des projets et la fonction du logiciel comme intrant intermédiaire. La conclusion est structurelle. L'open source a historiquement prospéré grâce à un cercle vertueux : plus d'utilisateurs produisent plus d'engagement (visites de documentation, signalements de bugs, participation communautaire), ce qui génère plus de financement, ce qui produit de meilleurs logiciels, ce qui attire plus d'utilisateurs. Le vibe coding brise ce cercle. Il augmente la productivité en réduisant le coût d'utilisation du code existant, mais élimine simultanément l'engagement par lequel les mainteneurs obtiennent leurs revenus.
+
+Le résultat quantitatif le plus frappant du modèle : pour maintenir l'équilibre économique, les utilisateurs « vibe coders » devraient contribuer **84 %** de la valeur d'engagement que génèrent actuellement les utilisateurs directs. Les auteurs eux-mêmes qualifient ce seuil d'irréaliste.
+
+Miklós Koren a déclaré au Register que les projets de haute qualité pouvaient continuer à prospérer, mais qu'il deviendrait beaucoup plus difficile de surmonter le « problème du démarrage à froid » pour les projets prometteurs en phase d'amorçage.
+
+### La proposition d'un « Spotify pour l'open source »
+
+L'article propose un modèle de redistribution des revenus inspiré de Spotify : les plateformes d'IA mesureraient quelles bibliothèques open source sont invoquées pendant les sessions de codage et redistribueraient une part des revenus aux mainteneurs, de manière proportionnelle à l'usage. Le mécanisme de mesure serait techniquement simple à mettre en place, selon Koren. Mais en mars 2026, aucune entreprise d'IA n'a pris d'engagement concret en ce sens.
+
+Le problème relève de l'action collective classique : les entreprises les plus capables de payer (OpenAI, Anthropic, Google) sont aussi celles dont le modèle d'affaires repose sur l'extraction de valeur depuis l'open source sans compensation directe aux créateurs.
+
+---
+
+## Le débat se cristallise en camps irréconciliables
+
+La communauté des développeurs s'est fragmentée en positions difficilement conciliables.
+
+D'un côté, ThePrimeagen (Michael Paulson), ancien ingénieur Netflix disposant d'une audience massive en streaming, incarne le milieu nuancé. En janvier 2026, il déclarait être « plus optimiste que jamais sur le codage traditionnel » tout en étant « plus optimiste que jamais sur le vibe coding ». Son outil « 99 », un plugin Neovim d'assistance IA, a été conçu pour des développeurs compétents qui utilisent l'IA comme amplificateur et non comme substitut.
+
+Craig Mod, écrivain et photographe, a publié en mars 2026 un essai intitulé « Software Bonkers », où il décrit la construction d'un logiciel comptable sur mesure en cinq jours grâce à Claude Code. Il qualifie l'expérience de « débroussaillage au sabre laser » et prédit que les entreprises SaaS devraient être vendues à découvert. L'essai a été relayé par Daring Fireball et Kottke.org en quelques heures.
+
+Paul Dix, CTO d'InfluxDB, a proposé le cadre stratégique le plus élaboré dans son essai « The Great Engineering Divergence in 2026 ». Sa thèse : le code est devenu bon marché, et le goulot d'étranglement s'est déplacé vers tout ce qui l'entoure (exigences, revue, validation, déploiement, exploitation). Il estime que les développeurs sont fonctionnellement **10 à 100 fois** plus productifs en volume de code brut, mais contraints par des chaînes de livraison incapables d'absorber ce débit. La divergence ne se joue pas entre les entreprises qui utilisent l'IA et celles qui ne l'utilisent pas. Elle se joue entre celles qui reconstruisent leur cycle de vie d'ingénierie autour de la vélocité IA et celles qui greffent l'IA sur des processus existants.
+
+---
+
+## L'Union européenne prend la mesure de l'enjeu
+
+La Commission européenne a ouvert du 6 janvier au 3 février 2026 un appel à contributions sur les écosystèmes numériques ouverts européens, reconnaissant que 70 à 90 % du code des systèmes numériques repose sur de l'open source et que « l'essentiel de la valeur générée par les projets open source est exploité hors de l'UE ». L'objectif affiché est de transformer les projets open source européens en alternatives commerciales viables face aux technologies américaines.
+
+Parallèlement, une lettre ouverte conjointe de dix registres de paquets (Maven Central, PyPI, npm, RubyGems, Rust Foundation et Eclipse Foundation, entre autres) a déclaré que « l'utilisation à échelle commerciale sans soutien à échelle commerciale est insoutenable ». Ces registres ont traité **10 000 milliards de téléchargements** au cours de l'année écoulée, dont 82 % de la consommation de Maven Central provenant de moins de 1 % des adresses IP mondiales.
+
+---
+
+## Ce qui survit aura un visage différent
+
+Le schéma qui émerge n'est pas un effondrement global de l'open source, mais une **stratification brutale**. Les projets monétisés par des services cloud et des contrats entreprise (Hugging Face à 4,5 milliards de dollars de valorisation, HashiCorp racheté par IBM pour 6,4 milliards, Databricks levant 14 milliards) continuent de prospérer parce que leurs canaux de revenus ne peuvent pas être « cachés » par une IA. Les projets monétisés par des entonnoirs de conversion documentaire sont en danger existentiel. Les projets de taille intermédiaire, là où se produit historiquement l'essentiel de l'innovation, font face aux pires perspectives.
+
+La crise du vibe coding n'est pas, fondamentalement, une crise de l'IA. Chaque mainteneur au cœur de cette histoire (Stenberg, Hashimoto, Ruiz, Wathan) utilise l'IA quotidiennement et la juge utile. La crise provient de **l'élimination de la friction**. Écrire du code n'a jamais été la partie difficile de l'open source. C'était la barrière à l'entrée qui filtrait les personnes insuffisamment investies pour apprendre. Quand l'IA a supprimé cette barrière, elle n'a pas démocratisé la contribution. Elle a inondé le système d'un bruit qu'il est coûteux de distinguer du signal.
+
+Les solutions qui émergent sont fondées sur la **confiance**, pas sur la technologie. Le système Vouch de Hashimoto, la nouvelle option de GitHub permettant de désactiver les pull requests, le mouvement croissant vers la restriction des contributions aux membres vérifiés de la communauté : tout pointe dans la même direction. L'open source est en train de devenir **moins ouvert**. Non par idéologie, mais par instinct de survie.
+
+La question désormais posée est celle de l'internalisation des externalités. Les entreprises d'IA accepteront-elles de redistribuer une part de la valeur qu'elles extraient (par le partage de revenus, l'attribution obligatoire des dépendances ou le financement direct) avant que l'écosystème dont elles dépendent ne se dégrade au point de non-retour ? Le seuil de 84 % identifié par le modèle de Koren, Békés et Hinz n'est pas seulement un résultat académique. C'est la mesure de la distance entre le monde dont l'industrie a besoin et celui qu'elle est en train de construire.
+
+---
+
+## Sources
+
+**Articles et billets de blog**
+
+1. Daniel Stenberg, « The end of the curl bug-bounty », daniel.haxx.se, 26 janvier 2026. https://daniel.haxx.se/blog/2026/01/26/the-end-of-the-curl-bug-bounty/
+2. Daniel Stenberg, « Open Source security in spite of AI », daniel.haxx.se, 3 février 2026. https://daniel.haxx.se/blog/2026/02/03/open-source-security-in-spite-of-ai/
+3. Daniel Stenberg, « curl security moves again », daniel.haxx.se, 25 février 2026. https://daniel.haxx.se/blog/2026/02/25/curl-security-moves-again/
+4. Steve Ruiz, « Stay away from my trash! », tldraw.dev, janvier 2026. https://tldraw.dev/blog/stay-away-from-my-trash
+5. Mitchell Hashimoto, « Vouch », GitHub. https://github.com/mitchellh/vouch
+6. Adam Wathan, déclarations sur Tailwind CSS, janvier 2026.
+7. Craig Mod, « Software Bonkers », craigmod.com, mars 2026. https://craigmod.com/essays/software_bonkers/
+8. Jeff Geerling, « AI is destroying Open Source, and it's not even good yet », jeffgeerling.com, 2026. https://www.jeffgeerling.com/blog/2026/ai-is-destroying-open-source/
+9. Continue Blog, « We're Losing Open Contribution », blog.continue.dev, 2026. https://blog.continue.dev/were-losing-open-contribution
+
+**Presse et médias spécialisés**
+
+10. InfoQ, « AI 'Vibe Coding' Threatens Open Source as Maintainers Face Crisis », février 2026. https://www.infoq.com/news/2026/02/ai-floods-close-projects/
+11. The New Stack, « cURL's Daniel Stenberg: AI slop is DDoSing open source », février 2026. https://thenewstack.io/curls-daniel-stenberg-ai-is-ddosing-open-source-and-fixing-its-bugs/
+12. The Register, « Vibe coding may be hazardous to open source », 26 janvier 2026. https://www.theregister.com/2026/01/26/vibe_coding_hazardous_open_source/
+13. The Register, « AI bot seemingly shames developer for rejected pull request », 12 février 2026. https://www.theregister.com/2026/02/12/ai_bot_developer_rejected_pull_request/
+14. The Register, « Open source package repositories face sustainability crisis », 28 février 2026. https://www.theregister.com/2026/02/28/open_source_opinion/
+15. Axios, « AI bug hunters are reshaping open-source security's disclosure programs », 10 mars 2026. https://www.axios.com/2026/03/10/ai-agents-spam-the-volunteers-securing-open-source-software
+16. Devclass, « Tailwind Labs lays off 75 percent of its engineers thanks to 'brutal impact' of AI », 8 janvier 2026. https://devclass.com/2026/01/08/tailwind-labs-lays-off-75-percent-of-its-engineers-thanks-to-brutal-impact-of-ai/
+17. Open Source For You, « Tailwind CSS Collapses Under AI Usage, Rescued By Google, Vercel & Lovable », janvier 2026. https://www.opensourceforu.com/2026/01/tailwind-css-collapses-under-ai-usage-rescued-by-google-vercel-lovable/
+18. Open Source For You, « GitHub Weighs Pull Request Kill Switch As AI Slop Floods Open Source », février 2026. https://www.opensourceforu.com/2026/02/github-weighs-pull-request-kill-switch-as-ai-slop-floods-open-source/
+19. It's FOSS, « Mitchell Hashimoto Launches 'Vouch' to Fight AI Slop in Open Source Ecosystem ». https://itsfoss.com/news/mitchell-hashimoto-vouch/
+20. Bugcrowd, « How lazy hacking killed cURL's bug bounty ». https://www.bugcrowd.com/blog/hacker-opinion-piece-how-lazy-hacking-killed-curls-bug-bounty/
+21. Bugcrowd, « Policy changes to address AI slop submissions ». https://www.bugcrowd.com/blog/bugcrowd-policy-changes-to-address-ai-slop-submissions/
+22. DEV Community, « Amazon Lost 6.3M Orders After AI Coding Tool Went Rogue ». https://dev.to/tyson_cung/amazon-lost-63m-orders-after-ai-coding-tool-went-rogue-now-theyre-hitting-the-brakes-2h7p
+
+**Recherche académique**
+
+23. Miklós Koren, Gábor Békés, Julian Hinz, « Vibe Coding Kills Open Source », arXiv:2601.15494, janvier 2026. https://arxiv.org/abs/2601.15494
+24. R. Maria del Rio-Chanona, Nadzeya Laurentsyeva, Johannes Wachs, « Large language models reduce public knowledge sharing on online Q&A platforms », PNAS Nexus, vol. 3, n° 9, 2024. https://academic.oup.com/pnasnexus/article/3/9/pgae400/7754871
+
+**Rapports sectoriels et données**
+
+25. Veracode, « GenAI Code Security Report 2025 ». https://www.veracode.com/blog/genai-code-security-report/
+26. Grith.ai, « Vibe Coding Is Killing Open Source, and the Data Proves It ». https://grith.ai/blog/vibe-coding-killing-open-source
+27. RedMonk (Kate Holterhoff), « The Generative AI Policy Landscape in Open Source », février 2026. https://redmonk.com/kholterhoff/2026/02/26/generative-ai-policy-landscape-in-open-source/
+28. OpenSSF, « AI-SLOP: Develop best current practises for Open Source maintainers », GitHub Issue #178. https://github.com/ossf/wg-vulnerability-disclosures/issues/178
+29. Help Net Security, « European Commission opens consultation on EU digital ecosystems », janvier 2026. https://www.helpnetsecurity.com/2026/01/09/eu-call-for-evidence-open-source/
+30. Linuxiac, « NetBSD's New Policy: No Place for AI-Created Code ». https://linuxiac.com/netbsd-new-policy-prohibits-usage-of-ai-code/

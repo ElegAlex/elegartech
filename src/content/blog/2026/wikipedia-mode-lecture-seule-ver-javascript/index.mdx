@@ -1,0 +1,161 @@
+---
+title: "Wikipedia en mode lecture seule : autopsie d'un ver JavaScript dormant activé par erreur"
+description: "Un ver JavaScript dormant depuis 18 mois a compromis 85 comptes Wikipedia et vandalisé 4 000 pages, révélant des failles architecturales profondes."
+date: 2026-03-15
+categories: ["Sécurité", "Analyses"]
+tags: ["Wikipedia", "JavaScript", "ver", "sécurité", "MediaWiki"]
+author: admin
+draft: false
+featured: false
+---
+
+**Le 5 mars 2026, un ingénieur sécurité de la Wikimedia Foundation a accidentellement déclenché un ver JavaScript vieux de 18 mois lors d'un audit de routine, provoquant la compromission de 85 comptes, la modification de près de 4 000 pages et le basculement de l'ensemble des projets Wikimedia en mode lecture seule pendant environ deux heures. Aucune donnée personnelle n'a été compromise, mais l'incident a mis en lumière des vulnérabilités architecturales profondes dans l'un des sites les plus consultés au monde.**
+
+---
+
+## Ce qui s'est passé : un audit qui devient l'incident
+
+La chaîne d'événements débute aux alentours de 15h00 UTC le 5 mars 2026. Scott Bassett, ingénieur sécurité de la Wikimedia Foundation (WMF), testait les limites de l'API globale pour les scripts utilisateurs sur Meta-Wiki. Plutôt que de créer des scripts de test isolés, Bassett a chargé des scripts utilisateurs existants dans son fichier `global.js`, et ce alors qu'il était connecté en tant qu'**administrateur d'interface global** (global interface administrator). Ce rôle, l'un des plus puissants de l'écosystème Wikimedia, confère la capacité de modifier des fichiers JavaScript qui s'exécutent dans le navigateur de chaque utilisateur, sur l'ensemble des projets.
+
+Parmi les scripts chargés figurait `User:Ololoshka562/test.js`, hébergé sur Wikipédia en russe. Ce fichier contenait le « Wikiworm », un ver auto-réplicant dormant depuis mars 2024. Une fois exécuté sous les privilèges du compte de Bassett, le ver a suivi un schéma d'attaque en quatre phases :
+
+1. **Injection globale** : le ver s'est injecté dans `MediaWiki:Common.js`, le fichier JavaScript global chargé à chaque visite de page pour chaque utilisateur du wiki concerné.
+2. **Persistance** : il s'est répliqué dans les fichiers `common.js` individuels des comptes utilisateurs, garantissant sa survie même en cas de nettoyage du fichier global.
+3. **Dissimulation** : il a utilisé jQuery pour masquer les éléments d'interface susceptibles de révéler l'infection.
+4. **Destruction** : lorsqu'il s'exécutait sous un compte administrateur, il abusait des pages spéciales `Special:Nuke` et `Special:Random` avec le paramètre `action=delete` pour supprimer massivement des articles.
+
+Les comptes compromis, dont le compte officiel WMFOffice, ont posté des suppressions avec le résumé de modification en russe « Закрываем проект » (littéralement « fermeture du projet »).
+
+### Chronologie de l'incident
+
+Le ver est resté actif pendant **23 minutes** avant que l'équipe SRE (Site Reliability Engineering) de Wikimedia ne le contienne. La page de statut officielle wikimediastatus.net a documenté l'ensemble de la séquence :
+
+|Heure (UTC)|Événement|
+|---|---|
+|~15:00|Bassett charge le script malveillant dormant sous un compte d'administrateur d'interface global|
+|~15:30 à 15:53|Le ver s'active, s'injecte dans Common.js, commence sa propagation et la suppression de pages|
+|15:36|Page de statut mise à jour : signalement de problèmes d'accès à certains wikis|
+|~16:00|Tous les projets Wikimedia basculent en mode lecture seule. Le JavaScript utilisateur est désactivé globalement|
+|16:11|Page de statut : le problème a été identifié et un correctif est en cours de déploiement|
+|17:09|Le mode lecture/écriture est restauré sur l'ensemble des projets|
+|00:05 (6 mars)|Incident résolu. Les capacités de scripting utilisateur sont rétablies|
+
+**Bilan quantitatif** : près de 4 000 pages vandalisées, 85 comptes utilisateurs infectés, zéro fuite de données personnelles, l'ensemble des dommages intégralement restauré.
+
+---
+
+## L'origine du ver : les guerres de wikis russophones de 2023
+
+Le Wikiworm n'a pas été conçu pour attaquer Wikipédia. La reconstitution de l'origine du script, réalisée par la communauté Discord de Wikipédia en russe puis confirmée par le rapport spécial du Wikipedia Signpost du 10 mars, a retracé sa création dans le contexte d'attaques vandales de 2023 contre deux projets wiki alternatifs russophones : Wikireality et Cyclopedia. Le script était une arme dans des conflits inter-wikis, conçu pour se propager via le système d'exécution JavaScript de MediaWiki.
+
+En mars 2024, l'utilisateur Ololoshka562 a téléversé le script sur Wikipédia en russe, où il est resté inerte. Le Signpost a estimé que, selon toute vraisemblance, Ololoshka562 ignorait probablement que le script existait encore et n'avait certainement pas planifié l'incident de mars 2026.
+
+Un détail technique révélateur : le composant de charge utile externe du ver, un chargeur de scripts XSS pointant vers le domaine `basemetrika.ru`, était devenu inopérant. Le développeur MediaWiki bawolff a précisé dans la discussion Hacker News que le domaine n'existait même plus, rendant ce vecteur d'attaque totalement inefficace.
+
+Les dégâts se sont donc limités au vandalisme et à la suppression de pages, sans tentative d'exfiltration de données. Des analystes de sécurité ont néanmoins observé que le script aurait théoriquement pu tenter une collecte de données d'authentification via le remplissage automatique des navigateurs, soulignant que les conséquences auraient pu être considérablement plus graves. Le Signpost a formulé un jugement sans détour : un exploit terrifiant qui aurait pu avoir des conséquences catastrophiques si exploité de manière malveillante a finalement servi à du vandalisme puéril, déclenché par accident.
+
+---
+
+## L'architecture JavaScript de Wikipédia : un problème structurel ancien
+
+L'incident a enflammé un débat technique intense sur Hacker News, où le fil de discussion a atteint environ **912 points et 318 commentaires**. Le problème de fond : environ 15 administrateurs d'interface global par wiki majeur peuvent modifier `MediaWiki:Common.js`, un fichier qui exécute du JavaScript dans le navigateur de chaque visiteur, sans revue de code, sans bac à sable (sandboxing), et sans séparation entre environnements de test et de production.
+
+### Un système de confiance sans garde-fous
+
+Un commentateur se présentant comme ancien éditeur de Wikipédia (« Wikipedianon ») a publié l'un des messages les plus relayés du fil : la communauté Wikipedia adopte, selon cette personne, une attitude désinvolte envers la sécurité. Tout utilisateur disposant du statut d'administrateur d'interface peut modifier le JavaScript ou le CSS global pour l'ensemble des utilisateurs d'un wiki donné, sans aucune revue. La plupart des « power users » et administrateurs installent des scripts utilisateurs, qui sont des gadgets JavaScript et CSS non sandboxés capables de modifier intégralement le fonctionnement du site. Ces scripts sont souvent maintenus par des comptes utilisateurs abandonnés depuis longtemps, dépourvus d'authentification à deux facteurs.
+
+Le développeur epicprogrammer a établi un parallèle explicite avec le **ver Samy de MySpace en 2005** : l'injection dans MediaWiki:Common.js représente le scénario catastrophe absolu pour les déploiements MediaWiki, car ce script est exécuté par littéralement chaque visiteur et éditeur du site entier, créant une boucle de propagation massive et instantanée.
+
+### L'impossibilité de tester en environnement isolé
+
+Le Signpost a mis en évidence une lacune architecturale supplémentaire : il n'existe aucun moyen de créer une « branche de test » de l'arbre de dépendances des modèles et scripts de Wikipédia, rendant le test en bac à sable fondamentalement impossible. La publication a comparé cette situation à la fabrication d'un nouveau type de bombe géante en plein centre d'une ville densément peuplée, plutôt que dans un site d'essai isolé.
+
+Point crucial : **l'authentification à deux facteurs n'aurait rien changé ici**. Bassett était légitimement authentifié. La défaillance était d'ordre procédural (exécution de code non vérifié sous des identifiants de production) aggravée par une faiblesse architecturale (absence de revue de code pour le JavaScript exécuté globalement). Plusieurs développeurs sur Hacker News ont qualifié l'événement de « career limiting event » (événement limitant pour une carrière).
+
+---
+
+## La réponse de la Wikimedia Foundation
+
+La déclaration officielle de la WMF, publiée sur Meta-Wiki et communiquée à BleepingComputer, a souligné la nature accidentelle de l'incident : lors de l'audit, du code dormant a été activé par inadvertance, puis rapidement identifié comme malveillant. Le code est resté actif pendant 23 minutes. La Fondation a affirmé n'avoir aucune raison de penser que Wikipédia était activement attaquée ni que des informations personnelles aient été compromises.
+
+EMill-WMF, responsable de l'équipe Product Safety and Integrity, a reconnu sur le Discord de Wikipédia l'ironie de la situation : l'équipe a elle-même déclenché le script en tentant précisément d'évaluer ces risques. L'équipe s'est excusée pour la perturbation tout en rappelant que les risques dans ce système sont réels.
+
+### Des réformes techniques en cours
+
+Au-delà du confinement immédiat (mode lecture seule, désactivation globale du JavaScript), la Fondation a ouvert plusieurs tickets Phabricator signalant des réformes structurelles :
+
+- **T419143** pour le suivi global de l'incident de lecture seule
+- **T419234** et **T419265** pour des ajustements de la politique de sécurité du contenu (Content Security Policy)
+- **T419152** pour exiger une élévation de sécurité lors de la modification du JS/CSS d'un autre utilisateur
+- **T197137**, un ticket vieux de plusieurs années réclamant une élévation de sécurité pour la modification du JavaScript à l'échelle du site
+
+Le bulletin Tech News de la semaine du 9 mars a officiellement reconnu l'incident et dirigé les éditeurs vers le tableau de bord des stewards pour les mises à jour.
+
+Des membres de la communauté ont fait remarquer, avec une certaine amertume, que la WMF n'avait pas mis en œuvre pendant des années des solutions évidentes, comme l'exigence d'une confirmation 2FA pour l'édition du JavaScript à l'échelle du site. La tension entre le mandat sécuritaire de la Fondation et la résistance de la communauté à ce qui est perçu comme une captation de pouvoir reste un problème de gouvernance non résolu, propre aux infrastructures critiques gérées par des bénévoles.
+
+---
+
+## Une couverture francophone restée confidentielle
+
+La couverture en langue française est restée cantonnée aux médias spécialisés. **Clubic** a publié l'article francophone le plus complet le 6 mars, avec une analyse technique détaillée de la spécialiste cybersécurité Chloé Claessens. **Programmez!** a adopté un cadrage plus prudent, parlant d'un « code malveillant activé suite à un audit de sécurité ». **IT-Connect** (9 mars) a proposé une lecture orientée administration système, utilisant la métaphore épidémiologique du « patient zéro ». La newsletter suisse **DCOD** a intégré l'incident dans sa synthèse hebdomadaire des incidents cyber majeurs.
+
+Grande absente de cette couverture : la presse généraliste et technologique française de premier plan. Le Monde, Le Figaro, Numerama, Next (ex Next INpact), ZDNet.fr, LeMagIT, aucun de ces titres n'a publié d'article sur le sujet. Le Cyberhebdo de LeMagIT pour cette semaine l'a totalement ignoré. Cette discrétion s'explique probablement par la résolution rapide de l'incident et par la concurrence d'actualités cyber domestiques, notamment la fuite de données bancaires Ficoba touchant 1,2 million de comptes. L'ANSSI n'a pas réagi, conformément à son périmètre d'intervention centré sur les systèmes gouvernementaux français.
+
+---
+
+## Le parallèle avec la backdoor XZ Utils : une convergence inquiétante
+
+L'incident de mars 2026 partage des parallèles structurels troublants avec la **backdoor XZ Utils** (CVE-2024-3094), découverte en mars 2024. Dans les deux cas, du code malveillant dormant a exploité des relations de confiance au sein d'écosystèmes open source. La backdoor XZ impliquait environ deux ans d'ingénierie sociale pour obtenir un accès de mainteneur. Le Wikiworm est resté dormant 18 mois. Les deux exploits ont profité du décalage entre l'importance critique du logiciel et l'informalité de sa gouvernance. Les deux ont été détectés avant des dommages catastrophiques : XZ par un ingénieur curieux ayant remarqué une latence SSH anormale, Wikipédia par la détection automatisée de suppressions massives.
+
+La différence essentielle : la backdoor XZ était une opération sophistiquée, vraisemblablement étatique. Le Wikiworm était du code de vandalisme juvénile ayant accidentellement trouvé son chemin vers un contexte d'exécution privilégié. La leçon, cependant, converge : **les systèmes open source et de gouvernance ouverte servant d'infrastructure critique ne peuvent pas s'appuyer uniquement sur la confiance communautaire pour assurer leur sécurité.**
+
+Le fil Hacker News a fait émerger une dimension existentielle. Un contributeur a estimé qu'une cyberattaque étatique effaçant Wikipédia du réseau serait profondément dommageable pour la capacité de la société moderne à s'accorder sur des faits communs, situant cet enjeu non pas au niveau de l'eau potable, mais à un niveau significatif de criticité. D'autres ont tempéré en rappelant l'écosystème de miroirs distribués de Wikipédia (le projet Kiwix propose un dump texte complet d'environ 40 Go, et près de 115 Go avec les images), garantissant une forme de résilience technique.
+
+---
+
+## Wikipédia : infrastructure critique sans le statut qui va avec
+
+Wikipédia occupe une position singulière dans l'écosystème des communs numériques. L'encyclopédie est **de facto une infrastructure d'information critique** : référencée par les gouvernements, utilisée comme donnée d'entraînement pour les modèles d'intelligence artificielle, consultée en priorité lors de crises où d'autres sources d'information sont défaillantes. Pourtant, son architecture de sécurité reflète des choix de conception datant du début des années 2000, et son modèle de gouvernance confère à environ **1 000 administrateurs bénévoles non rémunérés** un pouvoir significatif sur la configuration du système.
+
+Rebecca MacKinnon, de la Wikimedia Foundation, déclarait lors d'un événement lié à l'Assemblée générale des Nations Unies en septembre 2024 que les gouvernements devaient protéger et soutenir les personnes qui construisent et gouvernent les biens publics numériques, comme Wikipédia. L'incident de mars 2026 a démontré avec une acuité particulière pourquoi ce soutien est nécessaire : les personnes qui construisent et gouvernent Wikipédia ont failli la détruire elles-mêmes.
+
+Le budget annuel de la Wikimedia Foundation (environ 185 millions de dollars de revenus, 271 millions de dollars d'actifs nets) suggère que les ressources financières existent pour investir massivement dans la sécurité. La question qui demeure est celle de la **volonté politique** : comment déployer ces moyens sans provoquer de rupture avec une communauté de bénévoles historiquement méfiante envers toute centralisation du pouvoir technique ?
+
+---
+
+## Conclusion : un quasi-accident qui appelle des réformes structurelles
+
+L'incident du 5 mars 2026 fut, en termes de dommages durables, un **non-événement** : 23 minutes d'exploitation active, environ deux heures d'indisponibilité en écriture, zéro perte de données, zéro compromission d'informations personnelles. Les systèmes de sauvegarde et la réactivité des équipes ont prouvé leur robustesse. Mais en termes de **révélation**, l'incident fut considérable.
+
+Trois enseignements structurants se dégagent.
+
+**Premièrement**, la principale menace pesant sur la sécurité de Wikipédia ne provient pas d'attaquants externes mais de la **tension entre son modèle de gouvernance ouverte et les exigences sécuritaires d'une infrastructure critique**. La résistance communautaire au durcissement sécuritaire, perçu comme une tentative de captation par la Fondation, a laissé des vulnérabilités connues sans réponse pendant des années.
+
+**Deuxièmement**, le **problème du code dormant** n'est pas propre à Wikipédia. Tout système autorisant du code exécutable contribué par les utilisateurs, sans revue obligatoire ni mécanisme d'expiration, crée un environnement d'incubation pour de futures attaques. Ce constat vaut pour l'ensemble des écosystèmes open source reposant sur des chaînes de confiance implicites.
+
+**Troisièmement**, l'incident démontre que les **communs numériques gouvernés par des bénévoles nécessitent un investissement professionnel en sécurité** proportionnel à leur importance sociétale. Non pas en remplacement de la gouvernance communautaire, mais en complément de celle-ci. La question n'est plus de savoir si cet investissement est nécessaire, mais comment le rendre compatible avec la culture de gouvernance ouverte qui fait la force et l'identité de ces projets.
+
+Le prochain incident sur Wikipédia, ou sur tout autre commun numérique d'envergure, pourrait ne pas être accidentel.
+
+---
+
+## Sources
+
+- **Wikimedia Foundation**, _March 2026 User Script Incident_, Meta-Wiki : [meta.wikimedia.org](https://meta.wikimedia.org/wiki/Wikimedia_Foundation/Product_and_Technology/Product_Safety_and_Integrity/March_2026_User_Script_Incident)
+- **Wikimedia Status**, page de statut de l'incident : [wikimediastatus.net](https://www.wikimediastatus.net/)
+- **Wikimedia Phabricator**, ticket T419143, _The wikis are currently read-only_ : [phabricator.wikimedia.org](https://phabricator.wikimedia.org/T419143)
+- **Wikipedia Signpost**, _Special report_, 10 mars 2026 : [en.wikipedia.org](https://en.wikipedia.org/wiki/Wikipedia:Wikipedia_Signpost/2026-03-10/Special_report)
+- **Wikipedia Signpost**, _News and notes_, 10 mars 2026 : [en.wikipedia.org](https://en.wikipedia.org/wiki/Wikipedia:Wikipedia_Signpost/2026-03-10/News_and_notes)
+- **Wikimedia Diff**, _Tech News 2026, week 11_, 9 mars 2026 : [diff.wikimedia.org](https://diff.wikimedia.org/2026/03/09/tech-news-2026-week-11/)
+- **BleepingComputer**, _Wikipedia hit by self-propagating JavaScript worm that vandalized pages_, mars 2026 : [bleepingcomputer.com](https://www.bleepingcomputer.com/news/security/wikipedia-hit-by-self-propagating-javascript-worm-that-vandalized-pages/)
+- **GIGAZINE**, _Wikipedia administrator account compromised and temporarily put into read-only mode_, 6 mars 2026 : [gigazine.net](https://gigazine.net/gsc_news/en/20260306-wikimedia-security-incident/)
+- **ByteIota**, _Wikipedia Admin Breach: Dormant Script Forces Read-Only Mode_ : [byteiota.com](https://byteiota.com/wikipedia-admin-breach-dormant-script-forces-read-only-mode/)
+- **Hacker News**, fil de discussion (~912 points, ~318 commentaires) : [news.ycombinator.com](https://news.ycombinator.com/item?id=47263323)
+- **Clubic**, _Près de 4 000 pages Wikipédia vandalisées_, 6 mars 2026 : [clubic.com](https://www.clubic.com/actualite-603508-pres-de-4-000-pages-wikipedia-vandalisees-apres-l-auto-propagation-d-un-ver-javascript.html)
+- **Programmez!**, _Wikipedia : un code malveillant activé suite à un audit de sécurité_ : [programmez.com](https://www.programmez.com/actualites/wikipedia-un-code-malveillant-active-suite-un-audit-de-securite-39097)
+- **IT-Connect**, _Pendant 23 minutes, ce ver JavaScript a semé la pagaille sur Wikipédia_, 9 mars 2026 : [it-connect.fr](https://www.it-connect.fr/pendant-23-minutes-ce-ver-javascript-a-seme-la-pagaille-sur-wikipedia/)
+- **DCOD** (Suisse), _Cyberattaques : les 12 incidents majeurs du 10 mars 2026_ : [dcod.ch](https://dcod.ch/2026/03/10/cyberattaques-les-12-incidents-majeurs-du-10-mars-2026/)
+- **Wikipediocracy Forum**, _Mass-compromising of admin accounts on meta_ : [wikipediocracy.com](https://wikipediocracy.com/forum/viewtopic.php?t=14555)
+- **ProHoster**, _Wikimedia employee accidentally released a malicious JavaScript worm_ : [prohoster.info](https://prohoster.info/en/blog/novosti-interneta/sotrudnik-wikimedia-sluchajno-zapustil-vredonosnyj-javascript-cherv-porazivshij-meta-wiki)
+- **DEV Community**, _The Wikipedia Mass Hack That Never Happened_ : [dev.to](https://dev.to/kunal_d6a8fea2309e1571ee7/the-wikipedia-mass-hack-that-never-happened-and-why-thats-the-real-story-3ai8)
+- **Wikimedia Foundation**, déclaration de Rebecca MacKinnon, septembre 2024 : [wikimediafoundation.org](https://wikimediafoundation.org/news/2024/09/21/un-general-assembly-wikipedia-future-internet/)

@@ -1,0 +1,196 @@
+---
+title: "Février 2026 : la France bascule vers le logiciel libre"
+description: "Circulaire Lecornu, doctrine ANSSI, programme hospitalier Alternative : trois signaux convergents vers la souveraineté numérique par l'open source."
+date: 2026-03-15
+categories: ["Open Source", "Analyses"]
+tags: ["logiciel libre", "souveraineté", "ANSSI", "DINUM", "cloud"]
+author: admin
+draft: false
+featured: false
+---
+
+**En l'espace de cinq jours, trois institutions françaises ont simultanément franchi le Rubicon du logiciel libre.** La circulaire du Premier ministre du 5 février, la doctrine open source de l'ANSSI du 9 février et le programme Alternative de la CAIH forment un triptyque inédit qui, pour la première fois, aligne commande publique, cybersécurité et infrastructure hospitalière sur une même trajectoire : celle de la souveraineté numérique par les communs logiciels. Cette convergence n'est pas fortuite. Elle résulte de quinze ans d'accumulation politique, de la pression du Cloud Act américain et d'un écosystème industriel français du libre pesant déjà **5,9 milliards d'euros**. Le signal est d'autant plus fort qu'il se double d'un geste concret : l'abandon de Zoom par le CNRS fin mars, redirigeant 154 000 utilisateurs vers des outils souverains.
+
+Reste une question structurelle : cette fois, l'État passera-t-il de la doctrine aux actes ?
+
+## Quinze ans de circulaires, une accélération brutale
+
+Pour mesurer la portée de février 2026, il faut comprendre la lente sédimentation qui l'a rendu possible. La politique française du logiciel libre procède par strates successives, chaque texte corrigeant les insuffisances du précédent sans jamais créer de rupture franche.
+
+La **circulaire Ayrault du 19 septembre 2012** (n° 5608/SG) avait ouvert la voie en posant un principe de bon sens : « Le choix du logiciel libre dans l'administration n'est pas un engagement idéologique, mais le fruit d'un choix raisonné. » Elle créait le SILL (Socle Interministériel de Logiciels Libres) et recommandait de réinvestir 5 à 10 % des économies réalisées en contributions aux projets libres. Mais le texte plaçait le libre à « égalité » avec le propriétaire, sans hiérarchie ni contrainte. L'April avait regretté l'absence de priorité explicite.
+
+Quatre ans plus tard, l'**article 16 de la loi pour une République numérique** (7 octobre 2016, dite loi Lemaire) inscrivait dans le droit que les administrations « encouragent l'utilisation des logiciels libres et des formats ouverts ». Un verbe faible — « encouragent » — fruit d'un arbitrage politique : le gouvernement avait écarté le terme « priorité », invoquant un risque constitutionnel lié au droit de la concurrence, alors même que cette formulation avait été la troisième proposition la plus soutenue lors de la consultation publique. L'April considère depuis que cette rédaction est « dépourvue de valeur normative ».
+
+La **circulaire Castex du 5 juillet 2021** (« Cloud au centre ») a marqué un tournant plus opérationnel. Elle imposait le cloud comme mode d'hébergement par défaut pour tout nouveau projet numérique et, surtout, exigeait pour les données sensibles un recours obligatoire à des offres qualifiées **SecNumCloud**, immunisées contre les lois extraterritoriales. C'est aussi en 2021 que la DINUM interdisait informellement Microsoft 365 dans les administrations et lançait, sous l'impulsion de Bastien Guerry, son plan d'action logiciel libre 2021-2023 — avec la plateforme code.gouv.fr, la communauté BlueHats et le marché interministériel de support libre.
+
+Le SILL a grandi : de 32 logiciels en 2013 à **500 références fin 2024**. Mais l'effectivité restait le maillon faible. La Cour des comptes notait en juillet 2024 que les ministères contournaient systématiquement l'obligation d'avis conforme de la DINUM en sollicitant cet avis après le lancement des projets. Les circulaires précédentes étaient, pour reprendre la formule de Républik IT, « restées lettres mortes dans beaucoup de cas ».
+
+C'est dans ce contexte d'accumulation doctrinale sans traduction opérationnelle suffisante que surgit le mois de février 2026.
+
+## La circulaire Lecornu instaure une hiérarchie d'achat inédite
+
+Signée le 5 février 2026 par le Premier ministre Sébastien Lecornu et présentée le même jour lors de l'événement « Je choisis la French Tech » à Bercy, la **circulaire n° 6519/SG** relative à la doctrine d'achats numériques de l'État constitue le texte le plus structurant depuis la doctrine Cloud au centre. Portée conjointement par Roland Lescure (Économie), Anne Le Hénanff (IA et Numérique) et David Amiel (Fonction publique), elle s'applique au système d'information de l'État défini par le décret n° 2019-1088 et aux groupes de marchandises du domaine 33 « Informatique et télécommunications ».
+
+Son architecture repose sur un **ordre de priorité contraignant en trois étapes**. D'abord, utiliser les solutions déjà mutualisées en interne au sein de l'État. Ensuite, recourir aux solutions privées « sur étagère », françaises puis européennes. En dernier recours seulement, développer des solutions spécifiques — « lorsqu'aucune solution existante ne permet de répondre à ces besoins ou lorsque les impératifs de résilience interne et de continuité du service public exigent une très forte maîtrise interne des outils concernés ». Pour la première fois, le texte formule une recommandation explicite : « **il est recommandé de privilégier, lorsque c'est pertinent, le recours à des produits open source** ».
+
+La souveraineté numérique devient le premier critère d'évaluation, définie comme « la capacité d'une Nation à agir de manière autonome dans ses domaines stratégiques, en maîtrisant les dépendances technologiques, opérationnelles et réglementaires envers des acteurs non européens ». Trois axes opérationnels la déclinent : l'**immunité aux lois extraterritoriales** (Cloud Act en ligne de mire), la **capacité de substitution et réversibilité**, et l'**absence de dépendance monopolistique**. Le texte y ajoute l'interopérabilité, la sécurité, le coût complet calculé à l'échelle de l'État, la durabilité et l'innovation.
+
+La circulaire formalise aussi l'architecture de **La Suite numérique** en trois cercles. Le premier, socle stratégique opéré par l'État, comprend Tchap (messagerie Matrix, **375 000 utilisateurs** actifs mensuels), Visio (visioconférence basée sur LiveKit, hébergée chez Outscale en SecNumCloud, en déploiement vers **200 000 agents** au T1 2026) et FranceTransfert. Le deuxième cercle ouvre les services complémentaires — messagerie, coédition — au secteur privé sous exigences d'interopérabilité. Le troisième accueille les outils innovants : tableur collaboratif Grist, Assistant IA développé avec Mistral AI (10 000 agents testeurs), prise de notes.
+
+Le même jour, les ministères concernés annonçaient la **sortie définitive du Health Data Hub de Microsoft Azure**. La mise en concurrence a été lancée le 9 février via le marché Nuage Public de l'UGAP, avec attribution fin mars et migration complète prévue fin 2026 vers un hébergement SecNumCloud. Lise Alter, directrice du HDH, précisait que la migration directe permettrait d'être opérationnel « fin 2026 » contre « au mieux mi-2027 » avec la solution intercalaire initialement envisagée. Après sept ans de polémique depuis le choix d'Azure en 2019, critiqué par la CNIL et le Conseil d'État, c'est un dénouement significatif.
+
+David Amiel a résumé l'ambition en termes francs : « Pour tous les usages critiques, nous devons nous désintoxiquer des outils non-européens et construire les outils d'indépendance européenne. »
+
+## L'ANSSI fait du libre un pilier de cybersécurité
+
+Quatre jours après la circulaire Lecornu, le 9 février, l'ANSSI publiait sur cyber.gouv.fr une mise à jour de sa politique open source, structurée autour de **quatre axes** qui formalisent des pratiques jusque-là diffuses. Comme le notait Le Monde Informatique, « jusqu'à présent, ses initiatives étaient assez isolées, sans réel cadrage et orientations stratégiques clairs ».
+
+Le premier axe — **publier** — officialise la mise en open source des projets de l'agence (79 dépôts sur l'organisation GitHub ANSSI-FR), avec une classification en trois niveaux d'ouverture et une préférence affirmée pour les **licences permissives, en particulier Apache 2.0**, « afin de limiter les restrictions imposées sur la réutilisation du code source, y compris dans un cadre commercial ». Le choix d'une licence copyleft (famille GNU GPL) reste possible lorsque la réutilisation propriétaire menace l'objectif du projet. Ce positionnement réjouira l'écosystème industriel qui redoute les licences restrictives.
+
+Le deuxième axe — **contribuer** — engage l'agence dans les contributions upstream, « sur la sécurité des briques de base des infrastructures numériques comme des noyaux de systèmes d'exploitation, tel que le noyau Linux ». L'ANSSI sort ainsi de la posture d'observateur pour assumer un rôle de contributeur actif aux fondations logicielles critiques.
+
+Le troisième axe — **renforcer l'écosystème** — est peut-être le plus concret. Depuis 2017, l'ANSSI finance des évaluations de sécurité de logiciels libres. L'audit de **HAProxy 3.2.5**, réalisé par Almond ITSEF, a rendu un verdict remarquable : zéro vulnérabilité dans le code source, zéro crash lors du fuzzing, une seule vulnérabilité dans une dépendance tierce (mjson, déjà corrigée). Mais le résultat le plus symbolique reste la **certification CSPN de KeePassXC 2.7.9** (certificat ANSSI-CSPN-2025/16, délivré le 17 novembre 2025, évaluation par Synacktiv), qui en fait le premier gestionnaire de mots de passe open source à obtenir un visa de sécurité ANSSI dans la période récente — la version originale KeePass ayant échoué deux fois à l'audit CSPN.
+
+Le quatrième axe — **utiliser en interne** — assume un pragmatisme assumé : l'ANSSI ne s'interdit pas le propriétaire mais privilégie le libre pour la transparence et la maîtrise. Les principes directeurs sont « **secure-by-design** » et « **open-by-default** », avec un rejet explicite de la « sécurité par l'obscurité ».
+
+Le guide « Sélection d'un logiciel libre » (publié en mai 2025, référencé dans la doctrine) complète le dispositif avec **10 critères opérationnels** : historique et notoriété du projet, responsable identifié, activité du projet, procédure de gestion des vulnérabilités, rapidité de correction des failles, inventaire des dépendances (SBOM), audits de sécurité, évolution des bases techniques, socle technique et documentation, contrat de support. Un outil d'aide à la décision concret pour les acheteurs publics.
+
+Sur LinuxFr.org, la dépêche de Sébastien Dinot (79 votes, 16 commentaires) saluait « une belle avancée et un signal fort », tout en pointant une incohérence : l'ANSSI publie son code sur GitHub (propriété de Microsoft), là où un hébergement sur **Codeberg** ou une instance auto-hébergée aurait été plus cohérent avec la souveraineté revendiquée. Le débat illustre la tension permanente entre pragmatisme de visibilité et cohérence doctrinale.
+
+## Les hôpitaux lancent un programme de migration sans précédent
+
+Le troisième signal provient d'un secteur inattendu. La **Centrale d'Achat de l'Informatique Hospitalière (CAIH)**, qui mutualise les achats numériques de plus de 2 000 établissements de santé pour environ **500 millions d'euros par an**, a lancé le programme Alternative : un partenariat d'innovation quinquennal d'un montant maximum de **250 millions d'euros HT** (5 ans + 2 ans de reconduction) visant à construire un socle numérique souverain entièrement open source pour le secteur hospitalier.
+
+Le périmètre fonctionnel est ambitieux : modern workspace (messagerie, agenda, bureautique, collaboration, GED, visioconférence), gestion d'identité et d'accès interopérable avec Pro Santé Connect, briques d'infrastructure et virtualisation, gestion du parc et des postes de travail. Les exigences techniques sont strictes : **100 % open source** (tolérance maximale de 1 % propriétaire pour l'interopérabilité Microsoft), certification HDS obligatoire, capital maximum 24 % non-UE, SLA de 99,8 %, conformité RGPD/NIS2/PGSSI-S, et qualification SecNumCloud 3.2 fortement recommandée.
+
+Le DCE (dossier de consultation des entreprises) a été publié en décembre 2025, avec une date limite de candidature fixée au 19 février 2026. L'attribution est prévue pour juin 2026, les premiers prototypes pour le second semestre, et l'ouverture progressive à tous les adhérents à partir de 2027. **Treize établissements pilotes**, dont les Hospices Civils de Lyon, bénéficient d'une **dotation collective pouvant atteindre 1 million d'euros** et d'un accompagnement méthodologique, technique et financier.
+
+LINAGORA, éditeur français des solutions Twake (collaboration Matrix) et LinShare (partage de fichiers), est un partenaire historique de la CAIH via un accord-cadre antérieur. Le portail hopital-libre.fr, créé dans ce cadre, proposait déjà Twake, LinShare, Jitsi, OnlyOffice et PostgreSQL en hébergement HDS souverain. Mais le nouveau programme Alternative est une procédure ouverte : aucun titulaire n'est encore désigné.
+
+Le 6 février, **Stéphanie Rist**, ministre de la Santé, s'est rendue aux Hospices Civils de Lyon pour réaffirmer publiquement le soutien du ministère au programme. « Nous faisons le choix clair de la souveraineté, de la cybersécurité et de l'innovation », a-t-elle déclaré, annonçant dans la foulée la migration du Health Data Hub et le programme HospiConnect (225 millions d'euros, 2026-2028) pour l'identité numérique des professionnels de santé.
+
+Pour un secteur hospitalier longtemps prisonnier de l'oligopole Microsoft, cette initiative représente un basculement stratégique. Après plus de dix ans de dépendance croissante — hausse des coûts de licences, complexification contractuelle, vulnérabilités RGPD/NIS2 — la CAIH tente de reconquérir sa souveraineté numérique par la mutualisation.
+
+## Le CNRS abandonne Zoom et 154 000 utilisateurs basculent
+
+Le signal complémentaire est venu du monde de la recherche. Fin janvier 2026, le CNRS a confirmé la fin de son contrat Zoom pour **34 000 agents et 120 000 chercheurs associés**. L'outil Citadel Team (Thales) est également arrêté. Alain Schuhl, directeur général délégué à la science du CNRS, l'avait annoncé lors de la visite de David Amiel au laboratoire I2BC de Gif-sur-Yvette le 26 janvier : « Dès mars prochain, nous allons mettre fin à l'utilisation de nos outils actuels, tels que Zoom ou Citadel. »
+
+Les agents sont redirigés vers trois outils : **Visio** (DINUM, jusqu'à 150 participants, basé sur LiveKit, SecNumCloud), **Webinaire** (DINUM, jusqu'à 350 participants, basé sur BigBlueButton) et **Rendez-vous** (RENATER, jusqu'à 50 participants, basé sur Jitsi). L'authentification passe par les comptes RENATER Janus ou ProConnect.
+
+Le CNRS est l'un des quatre pilotes de généralisation de Visio au T1 2026, aux côtés de l'Assurance Maladie, de la DGFiP et du ministère des Armées. L'objectif est d'atteindre 200 000 agents utilisateurs courant 2026, puis de généraliser à **2,4 millions d'agents** d'ici 2027. L'économie estimée : **1 million d'euros par an par tranche de 100 000 utilisateurs**, soit potentiellement 24 millions d'euros annuels pour l'ensemble de la fonction publique. Visio intègre déjà une transcription IA par Pyannote et prévoit le sous-titrage en temps réel via Kyutai pour l'été 2026.
+
+## Un écosystème entre espoir et scepticisme structurel
+
+Les réactions dessinent un paysage contrasté. Le **CNLL** adopte une posture de « prudence vigilante » : « Tout en restant prudent et dans l'attente de précisions demandées par le CSF, le CNLL apprécie la présence à plusieurs reprises de l'open source dans cette circulaire. » L'**April**, sans publier de communiqué formel, qualifie ces signaux d'« encourageants » sur Radio Cause Commune, tout en mobilisant l'énergie sur son Pacte du Logiciel Libre pour les élections municipales de mars 2026. L'**ADULLACT** poursuit des travaux convergents — notamment un projet de messagerie souveraine Matrix pour les collectivités — sans réaction publique directe.
+
+Les éditeurs français de suites collaboratives sont nettement plus critiques. LeMagIT rapporte que « les éditeurs qui se sont lancés dans l'aventure des suites collaboratives — quelquefois avec l'appui de l'État — le voient comme un coup de couteau dans le dos ». Renaud Ghia (Tixeo) plaide pour « un État architecte du socle, pas un État éditeur de logiciel généraliste ». **Numeum**, la fédération professionnelle du numérique, a mis plus d'un mois avant de réagir (communiqué du 12 mars) en accueillant la circulaire comme « une clarification salutaire » tout en posant des conditions : quantifier les volumes d'achats, co-construire les modalités du recours aux solutions privées, étendre l'ambition aux collectivités.
+
+La presse spécialisée cultive un scepticisme structurel. Républik IT titrait « Encore une circulaire pour de bonnes pratiques », rappelant que la DINUM ne dispose toujours pas de mécanisme coercitif renforcé. CIO Online pointe l'absence de barème pondéré pour le critère de souveraineté. L'Usine Digitale relève le paradoxe de l'Éducation nationale, qui prolonge son contrat Microsoft pour quatre ans malgré les recommandations. Le fossé entre doctrine et pratique reste le point de vulnérabilité principal.
+
+## Le Cloud Act, moteur souterrain de l'accélération
+
+La convergence de février 2026 ne s'explique pas seulement par la volonté politique. Le **Cloud Act américain** (mars 2018), qui permet aux autorités judiciaires américaines d'exiger l'accès à des données détenues par des fournisseurs soumis au droit américain quel que soit leur lieu de stockage, a créé un **conflit juridique structurel** avec l'article 48 du RGPD. Ce dernier interdit les transferts de données sur la base d'une décision de juridiction étrangère sans accord international. Les entreprises européennes utilisant des services cloud américains se trouvent prises en étau : sanctions CNIL d'un côté (jusqu'à 4 % du chiffre d'affaires mondial), sanctions américaines de l'autre.
+
+La qualification **SecNumCloud 3.2** (mars 2022) a été la réponse technique de l'ANSSI : environ 1 200 exigences couvrant cybersécurité, risques juridiques et défaillances organisationnelles, avec localisation UE/FR et interdiction d'accès extra-UE. Mais la qualification de **S3NS** (Thales/Google Cloud) en décembre 2025 — premier cloud « hybride » utilisant de la technologie américaine sous opération française — a ravivé le débat entre deux conceptions de la souveraineté : la souveraineté opérationnelle (contrôle juridique, technologie étrangère acceptée) et la souveraineté industrielle (indépendance technologique totale). Le logiciel libre, par construction, se situe du côté de la souveraineté industrielle : le code est auditable, modifiable, et n'est soumis à aucune juridiction extraterritoriale.
+
+## La France en tête d'un mouvement européen
+
+Ces signaux français s'inscrivent dans une dynamique européenne plus large. L'Allemagne a créé en 2022 le **Sovereign Tech Fund** (devenu Sovereign Tech Agency), qui a investi plus de **24,6 millions d'euros** dans plus de 60 projets open source critiques en deux ans — dont 875 000 euros dans l'OpenJS Foundation, plus gros investissement gouvernemental unique dans un projet Linux Foundation. La loi allemande sur l'accès en ligne impose désormais aux administrations de donner la préférence à l'open source et aux standards ouverts.
+
+Au niveau de la Commission européenne, le programme **FOSSEPS** (Free and Open Source Software for European Public Services) a lancé en mars 2025 un catalogue européen de plus de 640 solutions open source, agrégeant les catalogues nationaux (SILL français, Open CoDE allemand, Developers Italia). L'initiative **EuroStack**, portée par une lettre ouverte cosignée par le CNLL et plus de 200 dirigeants en mars 2025, propose un « Buy European Tech Act » et un « Buy Open Source Act » pour structurer la préférence européenne.
+
+La France conserve toutefois une avance significative : avec **5,9 milliards d'euros** de chiffre d'affaires (étude CNLL/Markess 2022), la filière française de l'open source devance le Royaume-Uni (4,2 Md€) et l'Allemagne (4,0 Md€). Elle emploie plus de **60 000 personnes**, avec une projection à 90 200 emplois et 8,7 milliards d'euros d'ici 2027. La coopération franco-allemande se matérialise déjà : la DINUM collabore avec le BMI allemand sur Visio, et le standard **OpenBuro**, co-initié par la DINUM et LINAGORA au FOSDEM 2026, vise à orchestrer les applications open source en alternative unifiée à Microsoft 365.
+
+## De la doctrine à l'exécution, le vrai test commence
+
+Février 2026 marque une inflexion indéniable. Pour la première fois, trois logiques institutionnelles — l'achat public (circulaire Lecornu), la cybersécurité (doctrine ANSSI), l'infrastructure sectorielle (programme CAIH) — convergent simultanément vers le logiciel libre, chacune avec ses propres leviers et sa propre légitimité. Le geste du CNRS abandonnant Zoom pour 154 000 utilisateurs donne une réalité concrète à cette convergence.
+
+Mais les obstacles sont réels. La circulaire n'instaure pas de mécanisme coercitif nouveau : les seuils d'avis conforme DINUM discutés dans les versions de travail (3 millions d'euros pour les logiciels, 2 millions pour le cloud) n'apparaissent pas dans le texte final. L'Éducation nationale prolonge son contrat Microsoft. Les éditeurs français dénoncent une concurrence déloyale de l'État. Le programme Alternative de la CAIH n'a pas encore de titulaire. Et comme le rappelle l'histoire de **Munich** — 15 000 postes migrés vers Linux entre 2003 et 2013, puis retour à Windows en 2017 pour des raisons politiques au prix de 50 millions d'euros — les migrations massives sont réversibles quand la volonté politique faiblit.
+
+Ce qui distingue le moment présent, c'est l'alignement de trois facteurs qui n'ont jamais coexisté à cette intensité : une **pression juridique externe** (Cloud Act, Schrems II), une **maturité technologique** des alternatives libres (Visio, Tchap, Twake, KeePassXC certifié), et un **écosystème industriel** structuré capable d'absorber la demande. Le marché français du logiciel libre a été multiplié par 40 en vingt ans. Les communs numériques ne sont plus une utopie de développeurs : ils sont devenus une catégorie de politique publique. La question n'est plus de savoir si la France doit emprunter ce chemin. C'est de savoir si elle saura, cette fois, y rester.
+
+---
+
+## Sources
+
+**Circulaire et doctrine d'achats publics numériques**
+
+- Circulaire n° 6519/SG du 5 février 2026 relative à la commande publique numérique, texte intégral ([achatpublic.info](https://www.achatpublic.info/sites/default/files/document/documents/circulaire_6519_sg_du_5_fevrier_2026_relative_a_la_commande_publique_numerique.pdf))
+- DINUM, « Achats publics numériques : l'État précise sa doctrine », communiqué de presse, 5 février 2026 ([numerique.gouv.fr](https://numerique.gouv.fr/sinformer/espace-presse/achats-publics-num%C3%A9riques-letat-pr%C3%A9cise-sa-doctrine/))
+- Ministère de l'Économie, « Achats publics numériques : l'État précise sa doctrine », 5 février 2026 ([presse.economie.gouv.fr](https://presse.economie.gouv.fr/?p=170369))
+- CIO Online, « Une circulaire va renforcer le poids de la Dinum dans les achats IT de l'État », février 2026 ([cio-online.com](https://www.cio-online.com/actualites/lire-une-circulaire-va-renforcer-le-poids-de-la-dinum-dans-les-achats-it-de-l-etat-16784.html))
+- Républik IT, « Achats numériques de l'État : encore une circulaire pour de bonnes pratiques », février 2026 ([republik-it.fr](https://www.republik-it.fr/decideurs-it/achat-it/achats-numeriques-de-l-etat-encore-une-circulaire-pour-de-bonnes-pratiques.html))
+- Weka, « Achats publics numériques : l'État clarifie sa doctrine », février 2026 ([weka.fr](https://www.weka.fr/actualite/commande-publique/article/achats-publics-numeriques-l-etat-clarifie-sa-doctrine-211102/))
+- Acteurs Publics, « Avec sa doctrine sur les achats publics numériques, l'État clarifie ce que concevra ou non la Dinum », février 2026 ([acteurspublics.fr](https://acteurspublics.fr/articles/avec-sa-doctrine-sur-les-achats-publics-numeriques-letat-clarifie-ce-que-fabriquera-ou-non-la-dinum/))
+- L'Usine Digitale, « Achats numériques de l'État : le grand désordre que Bercy tente de reprendre en main », février 2026 ([usine-digitale.fr](https://www.usine-digitale.fr/souverainete/achats-numeriques-de-letat-le-grand-desordre-que-bercy-tente-de-reprendre-en-main.FYPDP3MW7ZGHRMHJOUJXV433F4.html))
+- Décision Achats, « Achats IT : Bercy impose la souveraineté », février 2026 ([decision-achats.fr](https://www.decision-achats.fr/achats-publics-1230/achats-it-bercy-impose-la-souverainete-50234))
+- Banque des Territoires, « Les administrations incitées à acheter des solutions numériques souveraines », février 2026 ([banquedesterritoires.fr](https://www.banquedesterritoires.fr/les-administrations-incitees-acheter-des-solutions-numeriques-souveraines))
+- Numeum, « Commande publique numérique : priorité à la filière, une clarification bienvenue à concrétiser », 12 mars 2026 ([numeum.fr](https://numeum.fr/affaires-publiques/commande-publique-numerique-priorite-a-la-filiere-une-clarification-bienvenue-a-concretiser))
+
+**La Suite numérique et Visio**
+
+- Ministère de l'Économie, « Souveraineté numérique : l'État généralise Visio », janvier 2026 ([presse.economie.gouv.fr](https://presse.economie.gouv.fr/?p=169175))
+- Next, « L'État veut généraliser Visio, l'outil de webconf de La Suite Numérique d'ici 2027 », janvier 2026 ([next.ink](https://next.ink/221125/letat-veut-generaliser-visio-loutil-de-webconf-de-la-suite-numerique-dici-2027/))
+- Le Monde Informatique, « L'État généralise Visio dans tous ses services », janvier 2026 ([lemondeinformatique.fr](https://www.lemondeinformatique.fr/actualites/lire-l-etat-generalise-visio-dans-tous-ses-services-99155.html))
+- Maddyness, « L'État embarque Kyutai et Pyannote AI pour son outil destiné à s'émanciper de Zoom et Teams », 26 janvier 2026 ([maddyness.com](https://www.maddyness.com/2026/01/26/letat-embarque-kyutai-et-pyannote-ai-pour-son-outil-destine-a-semanciper-de-zoom-et-teams-dans-la-fonction-publique/))
+- LeMagIT, « Polémique autour de LaSuite : la DINUM se défend et ne ferme pas la porte au privé », février 2026 ([lemagit.fr](https://www.lemagit.fr/actualites/366638848/Polemique-autour-de-LaSuite-la-DINUM-se-defend-et-ne-ferme-pas-la-porte-au-prive))
+- L'Usine Digitale, « La Suite Numérique : l'État ambitionne de bâtir une alternative souveraine crédible », 2026 ([usine-digitale.fr](https://www.usine-digitale.fr/souverainete/la-suite-numerique-letat-ambitionne-de-batir-une-alternative-souveraine-credible-face-aux-grandes-suites-bureautiques-americaines.EAX2IPKLWRDRVL25FKZUJV3U2E.html))
+- Infonet, « Visio remplace Teams et Zoom dans l'État français d'ici 2027 » ([infonet.fr](https://infonet.fr/actualite/articles-sur-lactualite-technologique/deploiement-visio-administrations-2027/))
+- Clubic, « Cocorico, l'administration française dit adieu à Zoom et Teams avec sa propre plateforme », 2026 ([clubic.com](https://www.clubic.com/actualite-597175-cocorico-l-administration-francaise-dit-adieu-a-zoom-et-teams-avec-sa-propre-plateforme-et-ca-a-des-avantages.html))
+- Acteurs Publics, « L'État déploie son outil de visioconférence souverain à l'ensemble de ses agents » ([acteurspublics.fr](https://acteurspublics.fr/articles/letat-deploie-son-outil-de-visioconference-souverain-a-lensemble-de-ses-agents/))
+- DINUM, « Souveraineté numérique : l'État généralise Visio » ([numerique.gouv.fr](https://www.numerique.gouv.fr/sinformer/espace-presse/souverainete-numerique-etat-visio-solution-visioconference-agents-publics/))
+
+**Doctrine open source de l'ANSSI**
+
+- ANSSI, page « Open source à l'ANSSI », mise à jour février 2026 ([cyber.gouv.fr](https://cyber.gouv.fr/open-source-lanssi))
+- ANSSI, « L'ANSSI met à jour sa politique open source », 9 février 2026 ([cyber.gouv.fr](https://cyber.gouv.fr/actualites/lanssi-met-a-jour-sa-politique-open-source/))
+- Le Monde Informatique, « L'ANSSI formalise sa doctrine open source », février 2026 ([lemondeinformatique.fr](https://www.lemondeinformatique.fr/actualites/lire-l-anssi-formalise-sa-doctrine-open-source-99352.html))
+- IT-Connect, « Open Source : l'ANSSI dévoile ses 4 piliers pour une sécurité souveraine », février 2026 ([it-connect.fr](https://www.it-connect.fr/open-source-lanssi-devoile-ses-4-piliers-pour-une-securite-souveraine/))
+- Silicon.fr, « L'ANSSI affirme l'open source comme levier de sa politique industrielle », février 2026 ([silicon.fr](https://www.silicon.fr/open-source-1375/anssi-politique-open-source-225687))
+- LinuxFr.org, dépêche « L'ANSSI révise sa doctrine vis-à-vis du logiciel libre », février 2026 ([linuxfr.org](https://linuxfr.org/news/l-anssi-revise-sa-doctrine-vis-a-vis-du-logiciel-libre))
+- ANSSI, guide « Sélection d'un logiciel libre » v1.0, mai 2025 ([cyber.gouv.fr](https://cyber.gouv.fr/sites/default/files/document/anssi_essentiels_selection_logiciel_libre_1.0.pdf))
+- Organisation GitHub ANSSI-FR ([github.com](https://github.com/ANSSI-FR))
+- HAProxy, « HAProxy Security Audit Results: Almond ITSEF Validates Resilience » ([haproxy.com](https://www.haproxy.com/blog/haproxy-security-audit-results))
+- Certificat ANSSI-CSPN-2025/16 KeePassXC 2.7.9 ([messervices.cyber.gouv.fr](https://messervices.cyber.gouv.fr/visas/ANSSI-CSPN-2025-16-certificat.pdf))
+
+**Programme Alternative de la CAIH**
+
+- CAIH, page « Programme Alternative » ([caih-sante.org](https://caih-sante.org/programme-alternative))
+- DCE CAIH Alternative Open Source ([gitlab.io](https://caih-alternative-open-source-bea16c.gitlab.io/))
+- DSIH, « La CAIH adopte son nouveau plan stratégique et lance Alternative », février 2026 ([dsih.fr](https://dsih.fr/articles/6172/la-caih-adopte-son-nouveau-plan-strategique-et-lance-alternative-un-programme-pour-renforcer-la-souverainete-numerique-des-hopitaux))
+- Hospitalia, « La CAIH lance Alternative, un programme pour renforcer la souveraineté numérique des hôpitaux », février 2026 ([hospitalia.fr](https://www.hospitalia.fr/La-CAIH-lance-Alternative-un-programme-pour-renforcer-la-souverainete-numerique-des-hopitaux_a4913.html))
+- Ministère de la Santé, « Avancées majeures pour la souveraineté numérique, la sécurité des systèmes d'information et l'innovation en santé », 6 février 2026 ([sante.gouv.fr](https://sante.gouv.fr/actualites-presse/presse/communiques-de-presse/article/avancees-majeures-pour-la-souverainete-numerique-la-securite-des-systemes-d))
+- Hopital-libre.fr, « Les enjeux de l'Open Source et de l'offre de la CAIH » ([hopital-libre.fr](https://www.hopital-libre.fr/fr/les-enjeux/))
+
+**Health Data Hub**
+
+- CIO Online, « Le Health Data Hub sort d'Azure pour basculer fin 2026 vers un cloud SecNumCloud », février 2026 ([cio-online.com](https://www.cio-online.com/actualites/lire-le-health-data-hub-sort-d-azure-pour-basculer-fin-2026-vers-un-cloud-secnumcloud-16830.html))
+- Aladom, « Souveraineté numérique : l'État passe à l'offensive et rapatrie les données de santé », février 2026 ([aladom.fr](https://www.aladom.fr/actualites/secteur-service/11014/souverainete-numerique-letat-passe-a-loffensive-et-rapatrie-les-donnees-de-sante/))
+
+**Contexte historique et réglementaire**
+
+- LinuxFr.org, « Circulaire du Premier ministre sur l'usage des logiciels libres dans l'Administration » (circulaire Ayrault, 2012) ([linuxfr.org](https://linuxfr.org/news/circulaire-du-premier-ministre-sur-l-usage-des-logiciels-libres-dans-l-administration))
+- April, « Analyse détaillée de la circulaire Ayrault sur le bon usage des logiciels libres » ([april.org](https://www.april.org/analyse-detaillee-circulaire-ayrault-sur-le-bon-usage-des-logiciels-libres-dans-les-administrations))
+- Légifrance, article 16 de la loi n° 2016-1321 du 7 octobre 2016 pour une République numérique ([legifrance.gouv.fr](https://www.legifrance.gouv.fr/jorf/article_jo/JORFARTI000033203039))
+- April, « Promulgation de la loi pour une République numérique : logiciels libres » ([april.org](https://www.april.org/promulgation-de-la-loi-pour-une-republique-numerique-logiciels-libres-mobilisation-de-l-april))
+- Wikipedia, « Socle interministériel de logiciels libres » ([fr.wikipedia.org](https://fr.wikipedia.org/wiki/Socle_interminist%C3%A9riel_de_logiciels_libres))
+- Face au Risque, circulaire n° 6282-SG du 5 juillet 2021 (doctrine Cloud au centre) ([faceaurisque.com](https://www.faceaurisque.com/base-reglementaire/circulaire-n-6282-sg-du-5-juillet-2021-relative-a-la-doctrine-dutilisation-de-linformatique-en-nuage-par-letat/))
+- Acteurs Publics, plan d'action DINUM logiciel libre, septembre 2021 ([acteurspublics.fr](https://acteurspublics.fr/upload/media/default/0001/36/acf32455f9b92bab52878ee1c8d83882684df1cc.pdf))
+- LeMagIT, « Logiciels libres dans l'Administration : le gouvernement a son plan d'action », 2021 ([lemagit.fr](https://www.lemagit.fr/actualites/252509438/Logiciels-libres-dans-lAdministration-le-gouvernement-a-son-plan-daction))
+
+**Cloud Act et SecNumCloud**
+
+- LeMagIT, « SecNumCloud, S3NS et la peur américaine : le débat sur la souveraineté numérique se trompe de cible » ([lemagit.fr](https://www.lemagit.fr/tribune/SecNumCloud-S3NS-et-la-peur-americaine-le-debat-sur-la-souverainete-numerique-se-trompe-de-cible))
+- SoftFluent, « Comprendre SecNumCloud » ([softfluent.fr](https://www.softfluent.fr/blog/comprendre-secnumcloud/))
+- L'Usine Digitale, « Ce que l'obtention du visa SecNumCloud par S3NS change durablement dans la doctrine française du cloud de confiance », 2025 ([usine-digitale.fr](https://www.usine-digitale.fr/informatique/cloud/souverainete-ce-que-lobtention-du-visa-secnumcloud-par-s3ns-change-durablement-dans-la-doctrine-francaise-du-cloud-de-confiance.IMMAGOMCTBFM3DXWKV2KBAZLSU.html))
+
+**Écosystème et comparaisons européennes**
+
+- CNLL, Lettre d'information de février 2026 ([cnll.fr](https://cnll.fr/news/lettre-dinformation-du-cnll-f%C3%A9vrier-2026/))
+- CNLL, « Étude 2022 : le marché de l'open source en France et Europe » ([cnll.fr](https://cnll.fr/news/etude-2022-le-march%C3%A9-de-lopen-source-en-france-et-europe/))
+- ChannelNews, « Le marché français de l'open source : 5,9 milliards et 60 000 emplois directs » ([channelnews.fr](https://www.channelnews.fr/le-marche-francais-de-lopen-source-59-milliards-et-60-000-emplois-directs-119432))
+- Interoperable Europe Portal, « Funding open source: case study on the Sovereign Tech Fund » ([europa.eu](https://interoperable-europe.ec.europa.eu/collection/open-source-observatory-osor/document/funding-open-source-case-study-sovereign-tech-fund))
+- Linux Foundation Europe, « Sovereign Tech Fund invests EUR 875,000 in the OpenJS Foundation » ([linuxfoundation.eu](https://linuxfoundation.eu/newsroom/stf-openjs))
+- EuroStack, « Position paper on EU procurement for Open Source digital sovereignty », mars 2025 ([euro-stack.com](https://euro-stack.com/blog/2025/3/eu-procurement-for-open-source-digital-sovereignty-final))
+- GoodTech, « OpenBuro : le standard européen qui veut orchestrer les apps open source contre Microsoft 365 » ([goodtech.info](https://goodtech.info/openburo-standard-europeen-orchestration-alternative-microsoft-365-dinum-linagora/))
+- CNLL et LinuxFr.org, « Élections municipales 2026 et Pacte du Logiciel Libre » ([cnll.fr](https://cnll.fr/news/elections-municipales-2026-et-pacte-du-logiciel-libre/), [linuxfr.org](https://linuxfr.org/news/l-april-propose-le-pacte-du-logiciel-libre-a-l-occasion-des-elections-municipales-et-communautaires-de-2026))
