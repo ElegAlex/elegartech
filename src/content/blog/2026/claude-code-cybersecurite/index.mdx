@@ -1,0 +1,416 @@
+---
+title: "Claude Code et cybersécurité : cartographie complète des skills, serveurs MCP et outillage en mars 2026"
+description: "Inventaire exhaustif et critique de l'écosystème sécurité de Claude Code : skills offensives et défensives, serveurs MCP, outils natifs et risques."
+date: 2026-03-20
+categories: ["Sécurité", "IA"]
+tags: ["Claude Code", "MCP", "pentest", "SAST", "Trail of Bits", "Snyk", "Semgrep", "skills", "supply chain"]
+author: admin
+draft: false
+featured: false
+---
+
+**De Trail of Bits à Snyk, de l'offensive au défensif : inventaire exhaustif et critique de l'écosystème de sécurité qui s'est construit autour de Claude Code en moins de deux mois.**
+
+L'écosystème de sécurité de Claude Code a connu une croissance explosive entre février et mars 2026. En moins de deux mois, plus de 25 skills installables, une quinzaine de serveurs MCP d'éditeurs majeurs et une couche émergente d'outils de méta-sécurité se sont structurés autour de l'outil CLI agentique d'Anthropic.
+
+Le catalyseur : le lancement de Claude Code Security le 20 février 2026, un scanner de vulnérabilités basé sur Opus 4.6 qui a identifié plus de 500 zero-days dans des bases de code open source en production, faisant chuter l'action CrowdStrike de 18,4 % en une séance. Mais cette effervescence soulève une question fondamentale : peut-on faire confiance à des outils de sécurité qui s'exécutent eux-mêmes dans un environnement dont les failles sont documentées depuis à peine un mois ? Cet article propose un inventaire exhaustif et critique de cet écosystème, avec pour chaque outil les commandes d'installation, les capacités réelles, les retours terrain et les risques identifiés.
+
+---
+
+## Les skills Claude Code, un écosystème en construction rapide
+
+Avant de plonger dans l'inventaire, il est nécessaire de clarifier ce que sont les skills dans le contexte de Claude Code. Une skill est un fichier Markdown (généralement `SKILL.md`) placé dans le répertoire `.claude/skills/` d'un projet ou dans le répertoire global `~/.claude/skills/`. Ce fichier contient des instructions structurées — méthodologies, arbres de décision, listes de vérification, commandes à exécuter — que Claude Code intègre à son contexte lors des sessions de développement. Contrairement à un plugin exécutable, une skill ne contient pas de code compilé : elle façonne le comportement de l'agent par le prompt. C'est à la fois sa force (transparence, auditabilité) et sa faiblesse (vulnérabilité à l'injection de prompt, comme nous le verrons).
+
+L'installation s'effectue selon trois modalités : le plugin marketplace intégré (`/plugin marketplace add <repo>`), la commande npm `npx skills install <repo>@<skill>`, ou le simple clonage du dépôt suivi d'une copie manuelle vers `.claude/skills/`. L'absence de registre centralisé vérifié et signé constitue le problème structurel majeur de cet écosystème.
+
+---
+
+## Skills de pentest et de sécurité offensive
+
+Plusieurs projets ambitieux visent à transformer Claude Code en agent de test d'intrusion autonome, orchestrant des outils comme Nmap, Nuclei, SQLMap et Metasploit au sein de workflows agentiques multi-phases.
+
+### TransilienceAI communitytools : le framework le plus complet
+
+Le dépôt `transilienceai/communitytools` est le package offensif le plus abouti de l'écosystème. Il s'installe via `/plugin marketplace add transilienceai/communitytools` et propose un pentest structuré en sept phases, avec plus de 35 agents spécialisés couvrant l'injection SQL, le XSS, le SSRF, les failles JWT, OAuth, SSTI et XXE. Le projet intègre 264 walkthroughs tirés de la PortSwigger Academy, génère des rapports avec scoring CVSS 3.1 et mappe les findings sur le référentiel MITRE ATT&CK.
+
+Les slash commands disponibles après installation incluent `/pentest` (lancement d'un cycle complet), `/hackerone` (workflow calqué sur les programmes de bug bounty), `/domain-assessment`, `/web-application-mapping`, `/common-appsec-patterns` et `/authenticating`. Le framework est actif et maintenu en février–mars 2026.
+
+La principale limite est l'absence totale de vérification d'autorisation légale intégrée. Aucun mécanisme ne s'assure que l'utilisateur dispose d'un mandat de test sur la cible. La responsabilité juridique repose entièrement sur l'opérateur.
+
+### shuvonsec/claude-bug-bounty : l'approche modulaire
+
+Ce dépôt (`shuvonsec/claude-bug-bounty`) adopte une architecture en sept fichiers SKILL.md indépendants, installables via `git clone` suivi de l'exécution du script `install.sh`. Le pipeline de reconnaissance enchaîne subfinder, dnsx, httpx, katana et nuclei. Dix-huit classes de bugs sont documentées avec des tables de techniques de contournement. Le projet inclut également un module d'audit Web3 et un générateur de rapports de bug bounty.
+
+Les slash commands sont nombreuses : `/recon`, `/hunt`, `/validate`, `/report`, `/chain`, `/scope`, `/triage` et `/web3-audit`. Le prérequis principal est l'installation locale des outils CLI sous-jacents (subfinder, nuclei, etc.), ce qui alourdit la mise en route.
+
+### Raptor : le DevContainer offensif
+
+Le projet `gadievron/raptor` prend une approche radicalement différente en fournissant un DevContainer complet d'environ 6 Go embarquant Semgrep, CodeQL v2.15.5, AFL++ pour le fuzzing, le débogueur rr et Playwright pour les tests web. Raptor se positionne comme un framework offensif et défensif autonome, intégrant les skills de SecOpsAgentKit. Les slash commands `/scan`, `/fuzz`, `/web`, `/agentic`, `/codeql` et `/analyze` couvrent l'essentiel des scénarios. L'inconvénient majeur est la taille du DevContainer et le temps de build initial.
+
+### Shannon : le pentester autonome à 50 dollars
+
+Le projet `unicodeveloper/shannon`, installable via `npx skills add unicodeveloper/shannon`, est un pentester IA entièrement autonome tournant dans Docker. Mis en avant dans l'article Medium de mars 2026 « 10 Must-Have Skills for Claude and Any Coding Agent in 2026 », Shannon exécute un cycle de pentest complet en une à une heure et demie, pour un coût d'environ 50 dollars sur le modèle Sonnet. Le système impose une porte d'autorisation à chaque invocation et des contrôles de périmètre stricts. Il est conçu pour les environnements de staging, pas pour la production.
+
+> **Encadré : autres skills offensives notables**
+>
+> **Eyadkelleh/awesome-claude-skills-security** intègre les listes SecLists (6 000 fichiers résumés) avec trois agents spécialisés : Pentest Advisor, CTF Assistant et Bug Bounty Hunter. Installation via `/plugin marketplace add Eyadkelleh/awesome-claude-skills-security`. Slash commands : `/sqli-test`, `/xss-test`, `/wordlist`, `/webshell-detect`, `/api-keys`.
+>
+> **jthack/ffuf_claude_skill** encapsule le fuzzer web FFUF avec un guidage expert pour l'énumération de répertoires et le fuzzing de paramètres. Recommandé de manière récurrente dans les listes curées `awesome-claude-skills`.
+
+---
+
+## Skills SAST et revue de code : une seule sort réellement du lot
+
+L'analyse statique est le domaine où l'offre de skills est la plus dense — et où l'écart de qualité entre les projets est le plus marqué. Un article de février 2026 publié sur TimOnWeb, « I Checked 5 Security Skills for Claude Code. Only One Is Worth Installing », a posé un verdict sans appel qui a largement circulé dans la communauté.
+
+### getsentry/skills@security-review : la référence méthodologique
+
+La skill de revue de sécurité de Sentry (`getsentry/skills`), installable via `npx skills install getsentry/skills@security-review`, est la seule à adopter une approche véritablement méthodologique. Là où les autres skills fournissent des checklists que Claude applique mécaniquement — avec les faux positifs que cela implique —, la skill de Sentry enseigne à Claude une **méthode de raisonnement**. Elle intègre un système de confiance à trois niveaux (HIGH, MEDIUM, LOW), une conscience explicite des faux positifs (elle sait que Django auto-échappe le HTML, que React protège contre le XSS sauf usage de `dangerouslySetInnerHTML`), et elle trace le flux de données avant de signaler un problème.
+
+La skill comprend 17 guides de référence par type de vulnérabilité et des guides spécifiques par langage : Python/Django, JavaScript/Node/React, Go, Rust, Docker et Kubernetes. Les findings sont numérotés selon un schéma structuré (VULN-001, VERIFY-001) qui facilite le triage.
+
+Le test comparatif de TimOnWeb illustre la différence de manière concrète : face à un projet Django standard, la skill d'`affaan-m/everything-claude-code` (la plus installée de l'écosystème, avec environ 52 000 stars pour la collection complète) signale `settings.API_URL` comme une vulnérabilité SSRF potentielle. La skill de Sentry, elle, reconnaît qu'il s'agit d'une configuration Django standard et ne déclenche pas de faux positif.
+
+### Le marketplace de Trail of Bits : la profondeur professionnelle
+
+Le dépôt `trailofbits/skills` (environ 3 300 stars, licence CC-BY-SA-4.0, 23 contributeurs) propose plus de 30 plugins organisés par domaine. L'installation se fait via `/plugin marketplace add trailofbits/skills`, puis sélection du plugin souhaité. Le volet analyse statique comprend une quinzaine de plugins : `static-analysis` (toolkit CodeQL, Semgrep et parsing SARIF), `variant-analysis` (recherche de vulnérabilités similaires par analyse de patterns), `semgrep-rule-creator` et `semgrep-rule-variant-creator` (création de règles Semgrep personnalisées avec validation pilotée par les tests), `differential-review`, `fp-check` (vérification de faux positifs), `insecure-defaults`, `sharp-edges`, `supply-chain-risk-auditor`, `audit-context-building`, `agentic-actions-auditor`, `burpsuite-project-parser` et `testing-handbook-skills` (depuis appsec.guide).
+
+Le marketplace couvre également la sécurité des smart contracts (`building-secure-contracts` pour six blockchains, `entry-point-analyzer`), la vérification formelle (`constant-time-analysis`, `property-based-testing`, `spec-to-code-compliance`, `zeroize-audit`), l'analyse malware (`yara-authoring`) et la sécurité mobile (`firebase-apk-scanner`). Des méta-skills comme `second-opinion` (qui lance des revues croisées via Codex et Gemini) complètent l'ensemble.
+
+Fait notable : la skill `constant-time-analysis` a découvert un véritable side-channel temporel dans la signature ML-DSA de la bibliothèque RustCrypto (issue RustCrypto/signatures#1144). C'est, à ce jour, le trophée le plus concret de l'écosystème de skills.
+
+Sur X, Muratcan Koylan a résumé l'impression générale de la communauté : « Ces 17 skills de sécurité pour Claude Code sont vraiment bien écrites. Des arbres de décision que les agents peuvent réellement suivre, des sources faisant autorité avec des chemins de fichiers spécifiques, des références imbriquées pour un contexte plus profond. C'est le début de quelque chose de massif. »
+
+### Autres skills SAST notables
+
+| Skill | URL GitHub | Installation | Spécificité |
+|---|---|---|---|
+| **Ghost Security** | `ghostsecurity/skills` | `/plugin marketplace add ghostsecurity/skills` | SAST IA + SCA + secrets + validation DAST combinés. Commands : `/ghost-scan-code`, `/ghost-report`, `/ghost-validate` |
+| **SecOpsAgentKit** | `AgentSecOps/SecOpsAgentKit` | `/plugin marketplace add https://github.com/AgentSecOps/SecOpsAgentKit.git` | 25+ skills : Semgrep, Bandit (Python), Checkov (IaC), Spectral (API), Hadolint (Dockerfile) |
+| **claude-code-owasp** | `agamm/claude-code-owasp` | `curl -sL .../SKILL.md -o .claude/skills/owasp-security/SKILL.md --create-dirs` | OWASP Top 10:2025, ASVS 5.0, Agentic AI Security 2026 (ASI01–ASI10), quirks par langage (20+) |
+| **VibeSec** | `BehiSecc/vibesec` | Git clone vers `.claude/skills/` | Prévention IDOR, XSS, SQLi, SSRF, auth faible, perspective bug hunter. Largement recommandé dans la communauté |
+
+---
+
+## Skills de recon, scanning et audit de dépendances
+
+Le volet défensif de l'écosystème couvre l'audit de supply chain, la détection de secrets et la protection des PII.
+
+Trail of Bits propose deux skills dédiées dans son marketplace : `supply-chain-risk-auditor` pour l'audit des menaces sur les dépendances et `insecure-defaults` pour la détection de configurations par défaut non sécurisées, de credentials codés en dur et de patterns fail-open.
+
+Le projet `wrsmith108/claude-skill-security-auditor` (16 stars) se concentre sur l'audit de dépendances npm : il exécute `npm audit --json`, classifie les vulnérabilités par sévérité, extrait les CVE et génère des rapports Markdown. Il supporte l'acceptation de risque documentée via un fichier `security-exceptions.json`. Du même auteur, `wrsmith108/varlock-claude-skill` s'assure que les variables d'environnement n'apparaissent jamais dans les sessions Claude, les terminaux, les logs ou les commits Git.
+
+Pour la détection de PII, la skill `sanitize` du dépôt `openclaw/skills` (environ 2 900 stars) couvre 15 catégories (numéros de sécurité sociale, cartes bancaires, clés API) avec zéro dépendance et un traitement entièrement local. Le projet `harish-garg/security-scanner-plugin` intègre GitHub Dependabot et la détection de secrets (clés AWS, tokens GitHub) avec des explications CVE générées par l'IA, via les slash commands `/check-deps`, `/check-secrets`, `/security-scan` et `/explain-cve`.
+
+---
+
+## Serveurs MCP orientés sécurité : les intégrations de premier ordre
+
+Les serveurs MCP (Model Context Protocol) représentent les intégrations sécurité les plus matures de l'écosystème. Contrairement aux skills qui influencent le comportement de Claude par le prompt, les serveurs MCP exposent de véritables outils de sécurité en tant que fonctions appelables par l'agent. L'ajout d'un serveur MCP dans Claude Code s'effectue via la commande `claude mcp add`.
+
+### Snyk : le serveur unique le plus complet
+
+L'installation du serveur MCP officiel de Snyk se fait via `npx -y snyk@latest mcp configure --tool=claude-cli`. Pour une configuration manuelle, ajouter dans `~/.claude.json` :
+
+```json
+{
+  "mcpServers": {
+    "snyk": {
+      "command": "npx",
+      "args": ["-y", "snyk@latest", "mcp", "-t", "stdio"]
+    }
+  }
+}
+```
+
+Le serveur expose 11 outils : `snyk_code_scan` (SAST), `snyk_test` (SCA), `snyk_iac_scan` (scanning d'infrastructure as code), `snyk_container_scan` (scanning de conteneurs), `snyk_sbom_scan` (génération SBOM), `snyk_ai_bom` (inventaire des composants IA, expérimental, Python uniquement), plus des outils d'authentification, de trust, de version, de feedback et de déconnexion. C'est le serveur MCP de sécurité le plus complet disponible à ce jour, avec un tier gratuit fonctionnel.
+
+### Semgrep : le SAST par règles avec 5 000 patterns
+
+Le serveur officiel Semgrep s'ajoute via `claude mcp add semgrep semgrep mcp`. Il expose sept outils : `security_check`, `semgrep_scan`, `semgrep_scan_with_custom_rule`, `get_abstract_syntax_tree`, `semgrep_findings`, `supported_languages` et `semgrep_rule_schema`. Le serveur inclut plus de 5 000 règles de détection, le scanning supply chain et la détection de secrets. Les règles personnalisées sont supportées. Le dépôt standalone (`semgrep/mcp`, environ 639 stars) est en cours de dépréciation au profit d'une intégration directe dans le CLI Semgrep. Un serveur communautaire alternatif existe en TypeScript : `mcp-server-semgrep`, installable via `npm install -g mcp-server-semgrep`.
+
+### Trivy, Burp Suite et Google : compléter le dispositif
+
+Le serveur MCP de **Trivy** (Aqua Security) s'installe via `claude mcp add trivy -- trivy mcp` (nécessite le CLI Trivy installé). Il couvre le scanning d'images conteneurs, de filesystems, de dépôts, la détection de misconfigurations IaC, la détection de secrets et la génération de SBOM au format CycloneDX. Licence Apache 2.0.
+
+Le serveur MCP de **Burp Suite** (PortSwigger) s'ajoute via `claude mcp add burp --transport sse http://127.0.0.1:9876`. Il donne accès à l'envoi de requêtes HTTP/1.1 et HTTP/2, à l'historique proxy avec filtrage regex, aux payloads Burp Collaborator (licence Pro requise), au Repeater/Intruder, à la gestion de configuration et aux utilitaires d'encodage. Il nécessite une instance Burp en cours d'exécution.
+
+**Google** propose quatre serveurs MCP de sécurité : SecOps pour Chronicle SIEM (`claude mcp add secops -- uvx secops_mcp`), Google Threat Intelligence/VirusTotal (`claude mcp add gti -- uvx gti_mcp`), Security Command Center (`claude mcp add scc -- uvx scc_mcp`) et SOAR (`claude mcp add secops-soar -- uvx secops_soar_mcp`). Ces quatre serveurs nécessitent des credentials Google Cloud.
+
+### Serveurs MCP communautaires et spécialisés
+
+| Serveur | URL GitHub | Commande d'ajout | Spécificité |
+|---|---|---|---|
+| **Nuclei** | `mark3labs/nuclei-mcp` | `claude mcp add nuclei -- go run cmd/nuclei-mcp/main.go` | Scanning Nuclei complet avec gestion de templates et cache |
+| **OWASP ZAP** (dtkmn) | `dtkmn/mcp-zap-server` | Docker-compose, v0.5.0 | Import OpenAPI, rapports HTML/JSON/Markdown, auth JWT/API, Postgres |
+| **OWASP ZAP** (LisBerndt) | `LisBerndt/zap-mcp-server` | Docker → `http://localhost:8082/mcp` | Scans passifs, actifs, complets, spider AJAX |
+| **OSV + Gitleaks** | `gleicon/mcp-osv` | `make build && make install` | Requêtes OSV.dev, Gitleaks v8 (100+ règles), analyse Go par AST |
+| **GhidraMCP** | `LaurieWired/GhidraMCP` | `claude mcp add ghidra -- python bridge_mcp_ghidra.py --ghidra-server http://127.0.0.1:8080/` | Rétro-ingénierie binaire autonome via Ghidra |
+| **Tengu** | `whatthefinemanual/tengu` | Serveur MCP Python | 80 outils de sécurité, 35 workflows, pentesting orchestré par IA |
+| **mcp-security-hub** (FuzzingLabs) | `FuzzingLabs/mcp-security-hub` | Docker-compose | 38 serveurs MCP, 300+ outils (recon, web, binaire, blockchain, OSINT, cloud) |
+| **Adversary MCP** | `brettbergin/adversary-mcp-server` | `uv pip install adversary-mcp-server` → `adv configure setup` | Scanning multi-moteurs Semgrep + IA, filtrage de faux positifs |
+| **Snyk Agent Scan** | `snyk/agent-scan` (~1 900 stars) | `uvx snyk-agent-scan@latest` | Méta-sécurité : scanne les serveurs MCP eux-mêmes pour tool poisoning, injection de prompt, flux toxiques |
+
+---
+
+## Les outils natifs d'Anthropic
+
+### La commande /security-review
+
+Livrée avec chaque installation de Claude Code, la commande `/security-review` effectue une analyse de sécurité alimentée par l'IA couvrant les attaques par injection, les failles d'authentification et d'autorisation, l'exposition de données, les problèmes cryptographiques, la validation d'entrées, les failles de logique métier (race conditions, TOCTOU), le XSS, la sécurité de configuration et les risques supply chain.
+
+Le filtrage de faux positifs intégré exclut automatiquement les vulnérabilités DoS, le rate limiting, les problèmes de sécurité mémoire en Rust, les fichiers de test et le XSS dans React/Angular (sauf usage explicite de `dangerouslySetInnerHTML`). La personnalisation s'effectue en copiant le fichier `security-review.md` depuis le dépôt `anthropics/claude-code-security-review` vers `.claude/commands/` et en ajoutant des règles spécifiques à l'organisation.
+
+### La GitHub Action anthropics/claude-code-security-review
+
+Cette action GitHub (licence MIT) automatise la revue de sécurité sur les pull requests. Configuration minimale :
+
+```yaml
+- uses: anthropics/claude-code-security-review@main
+  with:
+    comment-pr: true
+    claude-api-key: ${{ secrets.CLAUDE_API_KEY }}
+    claude-model: claude-opus-4-1-20250805
+    claudecode-timeout: 20
+    false-positive-filtering-instructions: path/to/custom-fp.md
+    custom-security-scan-instructions: path/to/custom-scan.md
+```
+
+L'action indique explicitement dans sa documentation qu'elle n'est **pas durcie contre les attaques par injection de prompt** et ne devrait être utilisée que pour vérifier des pull requests de confiance. Cette limitation est significative pour les projets open source recevant des contributions externes.
+
+### Claude Code Security : le produit entreprise
+
+Lancé le 20 février 2026, Claude Code Security est un scanner de base de code basé sur le raisonnement utilisant Opus 4.6. L'équipe Frontier Red Team d'Anthropic a identifié plus de 500 vulnérabilités jusque-là inconnues dans des bases de code open source en production, incluant des bugs non détectés pendant des décennies malgré des revues d'experts. Le système effectue une vérification automatique multi-étape et présente ses findings dans un dashboard avec patchs suggérés.
+
+Le produit est actuellement en preview de recherche limitée, accessible aux clients Enterprise et Team. Les mainteneurs de projets open source bénéficient d'un accès gratuit accéléré.
+
+> **Encadré : impact marché de Claude Code Security**
+>
+> L'annonce du 20 février a provoqué une chute de **18,4 %** de l'action CrowdStrike et de **7,3 %** de Palo Alto Networks en une séance. Snyk, Black Duck et Veracode avaient déjà réduit leurs effectifs de 8 à 19 % dans les mois précédents. En réponse, Snyk a lancé Evo, une plateforme d'orchestration de sécurité agentique. SonarSource a positionné Claude Code Security comme complémentaire au SAST traditionnel, et non concurrent. Le benchmark de ProjectDiscovery a confirmé que Claude Code détecte des findings de haute valeur que les scanners traditionnels manquent, mais produit davantage de faux positifs que les outils déterministes.
+
+### Autres mécanismes de sécurité intégrés
+
+Claude Code intègre plusieurs couches de protection au-delà de `/security-review`. Le **système sandbox** (`/sandbox`) utilise Seatbelt sur macOS et bubblewrap sur Linux, réduisant les invites de permission de 84 %. Le **système de permissions à niveaux** permet une gestion centralisée en contexte entreprise. Le **système de hooks** offre un enforcement de sécurité aux points clés du cycle de vie (PreToolUse, PostToolUse), bien qu'Anthropic et Trail of Bits le qualifient explicitement de « garde-fous, pas de murs ». Le **checkpointing** (`/rewind`) permet de revenir à un état antérieur en cas de modification indésirable. Une **analyse statique pré-exécution** des commandes bash, la **summarisation de recherche web** (anti-injection de prompt) et la **vérification de confiance des serveurs MCP** complètent le dispositif.
+
+---
+
+## Trail of Bits : l'écosystème de référence pour la sécurité de Claude Code
+
+Trail of Bits a construit l'écosystème de sécurité tiers le plus complet pour Claude Code, articulé autour de sept dépôts interconnectés. La newsletter tl;dr sec #316 (19 février 2026) a présenté leur approche comme le standard du marketplace de plugins vérifiés.
+
+### claude-code-config : le point d'entrée
+
+Le dépôt `trailofbits/claude-code-config` (environ 1 000 stars) est le point d'entrée de l'écosystème. L'installation se lance via `/trailofbits:config` dans n'importe quelle session Claude Code. L'assistant détecte automatiquement les composants existants et guide la configuration.
+
+Le dépôt fournit un fichier `settings.json` avec des défauts de sécurité opinionnés, un template CLAUDE.md imposant les règles internes de Trail of Bits (interdiction des fonctionnalités spéculatives, clarté plutôt qu'astuce, hooks pre-commit via `prek`, exigence de worktrees pour les sous-agents parallèles) et trois slash commands :
+
+- **`review-pr.md`** lance cinq agents de revue en parallèle sur deux passes, en utilisant Claude, Codex et Gemini simultanément.
+- **`fix-issue.md`** résout de manière autonome une issue GitHub avec auto-revue.
+- **`merge-dependabot.md`** évalue et fusionne par lots les PR Dependabot.
+
+Le modèle de sécurité de Trail of Bits est remarquable : ils font tourner Claude Code en mode **bypass-permissions** (aucune confirmation manuelle) en s'appuyant sur un sandboxing en couches. Trois niveaux sont superposés : le `/sandbox` natif pour l'isolation au niveau OS, `trailofbits/claude-code-devcontainer` pour l'isolation Docker (installé via `devc .`), et `trailofbits/dropkit` pour des instances DigitalOcean jetables. Le système de hooks fournit un enforcement contextuel qui se déclenche à des points précis du cycle de vie et **ne peut pas être contourné par la pression du contexte** — une propriété plus robuste que les instructions CLAUDE.md qui restent, elles, vulnérables au prompt engineering.
+
+### trailofbits/skills : 30 plugins, un trophée réel
+
+Le dépôt `trailofbits/skills` (environ 3 300 stars, licence CC-BY-SA-4.0, 23 contributeurs) a été détaillé dans la section SAST ci-dessus. Il convient d'insister sur l'étendue du catalogue : au-delà des 15 plugins d'audit de code, il couvre la sécurité blockchain, la vérification formelle, l'analyse malware, la sécurité mobile et propose des méta-skills comme `second-opinion` et `skill-improver`. Son trophée — la découverte d'un vrai side-channel temporel dans ML-DSA (RustCrypto/signatures#1144) — est le meilleur argument en faveur de l'approche skills pour la recherche de vulnérabilités.
+
+### context-protector : la défense contre les attaques MCP
+
+Le dépôt `trailofbits/context-protector` défend spécifiquement contre les attaques supply chain ciblant les serveurs MCP. Il implémente un pinning trust-on-first-use (TOFU) pour les instructions serveur, bloque les modifications de configuration non approuvées, scanne les descriptions d'outils par un guardrail LLM pour détecter l'injection de prompt et met en quarantaine les réponses d'outils suspectes.
+
+---
+
+## Packages npm de méta-sécurité
+
+Une catégorie d'outils émergente vise à sécuriser non pas le code de l'utilisateur, mais l'écosystème Claude Code lui-même : les skills, les configurations et les serveurs MCP.
+
+| Package | Installation | Fonctionnalité |
+|---|---|---|
+| **agent-security-scanner-mcp** | `npx agent-security-scanner-mcp init claude-code` | Scanne le code pour vulnérabilités, packages hallucinés (4,3M+ en base), injection de prompt. 1 700+ règles Semgrep, analyse AST + taint. Outils : `scan_security`, `fix_security`, `scan_packages`, `scan_agent_prompt`, `scan_git_diff` |
+| **claude-skill-antivirus** | `npm install -g claude-skill-antivirus` | 9 moteurs de détection de patterns malveillants, exfiltration de données, opérations dangereuses. A scanné les 71 577 skills du SkillsMP — environ 3 % signalées. Commands : `skill-install`, `skill-batch-scan` |
+| **ecc-agentshield** | `npx ecc-agentshield scan` | 102 règles, pipeline adversarial à 3 agents Opus 4.6 (Red Team, Blue Team, Auditeur). Scanne CLAUDE.md, settings.json, configs MCP, hooks, skills. Construit au hackathon Claude Code Cerebral Valley × Anthropic de février 2026 |
+| **@light-merlin-dark/claude-code-helper** | `npm i @light-merlin-dark/claude-code-helper` | CLI v2.4.0 avec détection automatique de secrets à chaque commande, remédiation en une commande, intelligence de configuration |
+
+---
+
+## Risques de sécurité de l'écosystème lui-même
+
+L'ironie de la situation n'échappe à personne : les outils censés renforcer la sécurité de Claude Code s'exécutent dans un environnement dont les failles sont documentées et dont la surface d'attaque est en expansion.
+
+### Le problème du supply chain sur les skills
+
+La recherche **ToxicSkills** de Snyk a trouvé de l'injection de prompt dans **36 % des skills testées** et identifié 1 467 payloads malveillants à travers l'écosystème. Cato CTRL a démontré qu'il était possible d'armer des Claude Skills pour déployer le ransomware MedusaLocker. La skill de sécurité la plus installée du marketplace (`sickn33/antigravity-awesome-skills@security-review`, plus de 1 600 installations) est une copie verbatim redistribuée depuis un bundle de 900 skills. Comme le note TimOnWeb : « le compteur d'installations est une métrique de distribution, pas un signal de qualité. »
+
+L'outil Repello SkillCheck (accessible en ligne sur repello.ai/tools/skills) et le package `claude-skill-antivirus` constituent les deux mécanismes de vérification disponibles avant installation. Repello a documenté dans un article de blog détaillé (« Claude Code Skill Security: How to Audit Any Skill Before You Run It ») une méthodologie d'audit en cinq étapes que tout utilisateur devrait appliquer systématiquement.
+
+### Les failles de Claude Code lui-même
+
+Le sujet a été traité en détail dans un [précédent article d'ElegarTech](/blog/2026/claude-code-vulnerabilites-fichiers-configuration). Pour mémoire, les CVE-2026-21852 (exfiltration de clé API via fichiers de settings malveillants, CVSS 5.3) et CVE-2025-59536 (exécution de commandes shell à l'initialisation d'outil, CVSS 8.7) ont été divulguées par Check Point Research en février 2026.
+
+Plus récemment, le chercheur leodido (créateur de Falco) a démontré sur Hacker News que Claude Code peut contourner sa propre denylist via des exploits du linker dynamique. Il a proposé **Veto**, un moteur d'enforcement au niveau noyau basé sur BPF LSM, comme alternative aux garde-fous applicatifs. L'utilisateur cedws a résumé le sentiment d'une partie de la communauté sécurité : « Le sandboxing de Claude Code est une blague complète. Il ne devrait pas y avoir de bouton 'off'. Si vous regardez ce truc à travers un prisme sécurité, c'est terrifiant. »
+
+Tim McAllister (DigiCert), dans un article Medium de février 2026 intitulé « Hardening Claude Code: A Security Review Framework and the Prompt That Does It For You », rappelle que « les hooks sont des scripts shell de pattern-matching, pas une frontière de sécurité. Une injection de prompt sophistiquée peut encore trouver des moyens de les contourner. Anthropic et Trail of Bits décrivent tous deux les hooks comme des garde-fous, pas des murs. »
+
+### Outils défensifs communautaires
+
+Face à ces limites, trois outils communautaires ont émergé rapidement. **CanaryAI** est un utilitaire de barre de menu macOS qui surveille les logs de session Claude Code pour détecter les reverse shells, les accès aux credentials et les mécanismes de persistence. **Railyard** (présenté sur Hacker News en mars 2026 via « Show HN: Railyard – open and secure runtime for Claude Code ») est un runtime open source qui s'insère entre Claude Code et le shell, avec une latence d'environ 2 ms par vérification de commande et sans recours au scoring LLM. **Veto**, mentionné plus haut, propose un enforcement BPF LSM au niveau noyau, la couche de protection la plus basse — et potentiellement la plus robuste — de l'écosystème.
+
+---
+
+## Stack recommandée : par où commencer
+
+Face à l'étendue du catalogue, le risque est la paralysie décisionnelle. Voici une stack pragmatique, ordonnée par priorité d'installation.
+
+**Couche 1 — les fondations (à installer immédiatement) :**
+
+- `trailofbits/claude-code-config` pour les défauts de sécurité opinionnés et le sandboxing en couches. C'est le socle.
+- `getsentry/skills@security-review` comme skill unique de revue de code. Elle est la seule à adopter une approche méthodologique plutôt qu'une checklist.
+
+**Couche 2 — le scanning automatisé (à ajouter dans la semaine) :**
+
+- Le serveur MCP Snyk (`npx -y snyk@latest mcp configure --tool=claude-cli`) pour le SAST, le SCA, le scanning IaC et conteneurs en un seul point d'entrée.
+- La GitHub Action `anthropics/claude-code-security-review` dans le CI/CD pour les revues de PR automatisées.
+
+**Couche 3 — la méta-sécurité (à intégrer dans le workflow) :**
+
+- `claude-skill-antivirus` ou `ecc-agentshield` pour auditer toute skill ou configuration avant adoption.
+- `trailofbits/context-protector` pour sécuriser les serveurs MCP contre le tool poisoning.
+
+**Couche 4 — le pentest de vos propres applications (en staging uniquement) :**
+
+- `transilienceai/communitytools` pour le framework de pentest le plus complet.
+- Le serveur MCP Burp Suite si vous disposez d'une licence Pro.
+
+Le principe transversal est simple : **aucune skill, aucun serveur MCP ne doit être adopté à l'aveugle**. Le taux de 36 % d'injection de prompt dans les skills, les CVE sur Claude Code lui-même et les évasions de sandbox démontrées imposent une défense en profondeur systématique : isolation conteneur + sandboxing OS + restrictions de permissions + hooks + monitoring externe.
+
+---
+
+## Sources
+
+**Annonce officielle et produit Anthropic**
+
+Anthropic, « Making frontier cybersecurity capabilities available to defenders » (annonce Claude Code Security), 20 février 2026 · [anthropic.com/news/claude-code-security](https://www.anthropic.com/news/claude-code-security)
+
+Anthropic, « Claude Code Security » (page produit) · [claude.com/solutions/claude-code-security](https://claude.com/solutions/claude-code-security)
+
+Anthropic, « Automated Security Reviews in Claude Code » (documentation) · [support.claude.com](https://support.claude.com/en/articles/11932705-automated-security-reviews-in-claude-code)
+
+Anthropic, « Making Claude Code more secure and autonomous » (sandboxing) · [anthropic.com/engineering/claude-code-sandboxing](https://www.anthropic.com/engineering/claude-code-sandboxing)
+
+Anthropic, « Claude Code Security Review GitHub Action » · [github.com/anthropics/claude-code-security-review](https://github.com/anthropics/claude-code-security-review)
+
+Anthropic, « Security — Claude Code Docs » · [code.claude.com/docs/en/security](https://code.claude.com/docs/en/security)
+
+Anthropic, « Configure permissions — Claude Code Docs » · [code.claude.com/docs/en/permissions](https://code.claude.com/docs/en/permissions)
+
+Anthropic, « Automate workflows with hooks — Claude Code Docs » · [code.claude.com/docs/en/hooks-guide](https://code.claude.com/docs/en/hooks-guide)
+
+**Trail of Bits**
+
+Trail of Bits, `claude-code-config` (configuration et workflows) · [github.com/trailofbits/claude-code-config](https://github.com/trailofbits/claude-code-config)
+
+Trail of Bits, `skills` (30+ plugins de sécurité) · [github.com/trailofbits/skills](https://github.com/trailofbits/skills)
+
+tl;dr sec #316, « How Trail of Bits uses Claude Code, GitHub Threat Intel, Open Source AI Pentesting Tools », 19 février 2026 · [tldrsec.com/p/tldr-sec-316](https://tldrsec.com/p/tldr-sec-316)
+
+**Skills de sécurité — dépôts GitHub**
+
+Sentry, `getsentry/skills` (security-review) · [github.com/getsentry/skills](https://github.com/getsentry/skills)
+
+TransilienceAI, `communitytools` (pentest) · [github.com/transilienceai/communitytools](https://github.com/transilienceai/communitytools)
+
+shuvonsec, `claude-bug-bounty` · [github.com/shuvonsec/claude-bug-bounty](https://github.com/shuvonsec/claude-bug-bounty)
+
+Eyadkelleh, `awesome-claude-skills-security` · [github.com/Eyadkelleh/awesome-claude-skills-security](https://github.com/Eyadkelleh/awesome-claude-skills-security)
+
+gadievron, `raptor` · [github.com/gadievron/raptor](https://github.com/gadievron/raptor)
+
+agamm, `claude-code-owasp` · [github.com/agamm/claude-code-owasp](https://github.com/agamm/claude-code-owasp)
+
+BehiSecc, `vibesec` · [github.com/BehiSecc/awesome-claude-skills](https://github.com/BehiSecc/awesome-claude-skills)
+
+AgentSecOps, `SecOpsAgentKit` · [github.com/AgentSecOps/SecOpsAgentKit](https://github.com/AgentSecOps/SecOpsAgentKit)
+
+ghostsecurity, `skills` · [github.com/ghostsecurity/skills](https://github.com/ghostsecurity/skills)
+
+wrsmith108, `claude-skill-security-auditor` · [github.com/wrsmith108/claude-skill-security-auditor](https://github.com/wrsmith108/claude-skill-security-auditor)
+
+affaan-m, `everything-claude-code` · [github.com/affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code)
+
+harperaa, `secure-claude-skills` · [github.com/harperaa/secure-claude-skills](https://github.com/harperaa/secure-claude-skills)
+
+claude-world, `claude-skill-antivirus` · [github.com/claude-world/claude-skill-antivirus](https://github.com/claude-world/claude-skill-antivirus)
+
+harish-garg, `security-scanner-plugin` · [github.com/harish-garg/security-scanner-plugin](https://github.com/harish-garg/security-scanner-plugin)
+
+**Serveurs MCP de sécurité**
+
+Semgrep, `mcp` · [github.com/semgrep/mcp](https://github.com/semgrep/mcp)
+
+Snyk, `agent-scan` · [snyk.io](https://snyk.io)
+
+FuzzingLabs, `mcp-security-hub` · [github.com/FuzzingLabs/mcp-security-hub](https://github.com/FuzzingLabs/mcp-security-hub)
+
+whatthefinemanual, `tengu` · [github.com/whatthefinemanual/tengu](https://github.com/whatthefinemanual/tengu)
+
+brettbergin, `adversary-mcp-server` · [github.com/brettbergin/adversary-mcp-server](https://github.com/brettbergin/adversary-mcp-server)
+
+gleicon, `mcp-osv` · [github.com/gleicon/mcp-osv](https://github.com/gleicon/mcp-osv)
+
+**Listes curées et comparatifs**
+
+travisvn, `awesome-claude-skills` · [github.com/travisvn/awesome-claude-skills](https://github.com/travisvn/awesome-claude-skills)
+
+BehiSecc, `awesome-claude-skills` · [github.com/BehiSecc/awesome-claude-skills](https://github.com/BehiSecc/awesome-claude-skills)
+
+VoltAgent, `awesome-agent-skills` · [github.com/VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills)
+
+TimOnWeb, « I Checked 5 Security Skills for Claude Code. Only One Is Worth Installing », 25 février 2026 · [timonweb.com](https://timonweb.com/ai/i-checked-5-security-skills-for-claude-code-only-one-is-worth-installing/)
+
+unicodeveloper, « 10 Must-Have Skills for Claude (and Any Coding Agent) in 2026 », mars 2026 · [medium.com](https://medium.com/@unicodeveloper/10-must-have-skills-for-claude-and-any-coding-agent-in-2026-b5451b013051)
+
+**Analyses du marché et retours terrain**
+
+Snyk, « Top 8 Claude Skills for Developers » · [snyk.io](https://snyk.io/articles/top-claude-skills-developers/)
+
+Snyk, « Why Anthropic Launching Claude Code Security Is Great News for the Industry » · [snyk.io](https://snyk.io/articles/anthropic-launches-claude-code-security/)
+
+DevOps.com, « Claude Code Security Finds the Bugs That Static Analysis Can't — and Wall Street Noticed » · [devops.com](https://devops.com/claude-code-security-finds-the-bugs-that-static-analysis-cant-and-wall-street-noticed/)
+
+GovInfoSecurity, « Why Claude Code Security Has Shaken the Cybersecurity Market » · [govinfosecurity.com](https://www.govinfosecurity.com/blogs/claude-code-security-has-shaken-cybersecurity-market-p-4056)
+
+SonarSource, « Thoughts on Claude Code Security » · [sonarsource.com/blog/thoughts-on-claude-code-security](https://www.sonarsource.com/blog/thoughts-on-claude-code-security/)
+
+DerScanner, « Claude Code Security Can Now Find 0-days. Here's Why That Doesn't Replace SAST » · [derscanner.com](https://derscanner.com/blog/claude-code-security-vs-sast)
+
+Semgrep, « Finding vulnerabilities in modern web apps using Claude Code and OpenAI Codex » · [semgrep.dev](https://semgrep.dev/blog/2025/finding-vulnerabilities-in-modern-web-apps-using-claude-code-and-openai-codex/)
+
+ProjectDiscovery, « Inside the benchmark: app architectures, walkthroughs of findings, and what each scanner actually caught » · [projectdiscovery.io](https://projectdiscovery.io/blog/inside-the-benchmark-pp-architectures-finding-walkthroughs-and-what-each-scanner-actually-caught)
+
+ChatForest, « Code Security MCP Servers — Snyk, SonarQube, Semgrep, Trivy, CodeQL, and Beyond » · [chatforest.com](https://chatforest.com/reviews/code-security-mcp-servers/)
+
+**Sécurité des skills et supply chain**
+
+Repello AI, « Claude Code Skill Security: How to Audit Any Skill Before You Run It » · [repello.ai](https://repello.ai/blog/claude-code-skill-security)
+
+Cato Networks, « Weaponizing Claude Skills with MedusaLocker » · [catonetworks.com](https://www.catonetworks.com/blog/cato-ctrl-weaponizing-claude-skills-with-medusalocker/)
+
+Tim McAllister, « Hardening Claude Code: A Security Review Framework and the Prompt That Does It For You », février 2026 · [medium.com](https://medium.com/@emergentcap/hardening-claude-code-a-security-review-framework-and-the-prompt-that-does-it-for-you-c546831f2cec)
+
+**Failles et sandbox escapes**
+
+Check Point Research, « Claude Code Flaws Allow Remote Code Execution and API Key Exfiltration » · [thehackernews.com](https://thehackernews.com/2026/02/claude-code-flaws-allow-remote-code.html)
+
+Check Point Blog, « Check Point Researchers Expose Critical Claude Code Flaws » · [blog.checkpoint.com](https://blog.checkpoint.com/research/check-point-researchers-expose-critical-claude-code-flaws/)
+
+Hacker News, « Claude Code escapes its own denylist and sandbox » · [news.ycombinator.com/item?id=47236910](https://news.ycombinator.com/item?id=47236910)
+
+Ona, « How Claude Code escapes its own denylist and sandbox » · [ona.com](https://ona.com/stories/how-claude-code-escapes-its-own-denylist-and-sandbox)
+
+Hacker News, « Show HN: Railyard – open and secure runtime for Claude Code » · [news.ycombinator.com/item?id=47327033](https://news.ycombinator.com/item?id=47327033)
+
+**Packages npm**
+
+`agent-security-scanner-mcp` · [npmjs.com](https://www.npmjs.com/package/agent-security-scanner-mcp)
+
+`@light-merlin-dark/claude-code-helper` · [npmjs.com](https://www.npmjs.com/package/@light-merlin-dark/claude-code-helper)
