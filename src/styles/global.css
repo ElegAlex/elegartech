@@ -229,15 +229,15 @@
     display: none;
   }
 
-  /* TOC scrollbar: thin, on the left side */
+  /* TOC scrollbar: thin, flipped to the left side */
   .toc-scroll {
-    direction: rtl;
+    transform: scaleX(-1);
     scrollbar-width: thin;
     scrollbar-color: var(--text-muted) transparent;
   }
 
   .toc-scroll > * {
-    direction: ltr;
+    transform: scaleX(-1);
   }
 
   .toc-scroll::-webkit-scrollbar {
