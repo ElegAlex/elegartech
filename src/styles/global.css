@@ -229,15 +229,10 @@
     display: none;
   }
 
-  /* TOC scrollbar: thin, on the left via direction flip */
+  /* TOC scrollbar: thin and visible */
   .toc-scroll {
-    direction: rtl;
     scrollbar-width: thin;
     scrollbar-color: var(--text-muted) transparent;
-  }
-
-  .toc-scroll > li {
-    direction: ltr;
   }
 
   .toc-scroll::-webkit-scrollbar {

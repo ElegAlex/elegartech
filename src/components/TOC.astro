@@ -14,23 +14,21 @@ const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
     <h2 class="text-sm font-semibold mb-3 text-[var(--text-muted)] uppercase tracking-wide">
       Sommaire
     </h2>
-    <div class="border-l border-[var(--code-border)]">
-      <ul class="space-y-2 text-sm overflow-y-auto overscroll-contain max-h-[calc(100vh-10rem)] toc-scroll">
-        {tocHeadings.map((heading) => (
-          <li
-            class={heading.depth === 3 ? 'ml-4' : ''}
+    <ul class="space-y-2 text-sm border-l border-[var(--code-border)] overflow-y-auto overscroll-contain max-h-[calc(100vh-10rem)] toc-scroll">
+      {tocHeadings.map((heading) => (
+        <li
+          class={heading.depth === 3 ? 'ml-4' : ''}
+        >
+          <a
+            href={`#${heading.slug}`}
+            class="toc-link block pl-4 py-1 border-l-2 border-transparent -ml-px text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent-primary)] transition-colors"
+            data-heading={heading.slug}
           >
-            <a
-              href={`#${heading.slug}`}
-              class="toc-link block pl-4 py-1 border-l-2 border-transparent -ml-px text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent-primary)] transition-colors"
-              data-heading={heading.slug}
-            >
-              {heading.text}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </div>
+            {heading.text}
+          </a>
+        </li>
+      ))}
+    </ul>
   </nav>
 )}
 
