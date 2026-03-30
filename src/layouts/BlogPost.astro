@@ -34,7 +34,7 @@ const readingTime = Math.ceil(post.body.split(/\s+/).length / 200);
   publishedTime={date}
   author={author.data.name}
 >
-  <article class="max-w-4xl mx-auto px-4 py-12">
+  <article class="max-w-6xl mx-auto px-4 py-12">
     <!-- Header -->
     <header class="mb-8">
       <div class="flex flex-wrap items-center gap-2 mb-4">
@@ -92,7 +92,7 @@ const readingTime = Math.ceil(post.body.split(/\s+/).length / 200);
     )}
 
     <!-- Content with TOC -->
-    <div class="lg:grid lg:grid-cols-[1fr_220px] lg:gap-8">
+    <div class="lg:grid lg:grid-cols-[1fr_260px] lg:gap-12">
       <div class="prose prose-lg max-w-none">
         <slot />
       </div>
