@@ -238,21 +238,24 @@
   }
 }
 
-/* TOC scrollbar: thin and always visible */
-.toc-scroll {
+/* TOC scrollbar: thin, always visible, on the left */
+.toc-scroll-left {
+  direction: rtl;
+  overflow-y: scroll;
+  max-height: calc(100vh - 12rem);
   scrollbar-width: thin;
   scrollbar-color: var(--text-muted) transparent;
 }
 
-.toc-scroll::-webkit-scrollbar {
+.toc-scroll-left::-webkit-scrollbar {
   width: 5px;
 }
 
-.toc-scroll::-webkit-scrollbar-track {
+.toc-scroll-left::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.toc-scroll::-webkit-scrollbar-thumb {
+.toc-scroll-left::-webkit-scrollbar-thumb {
   background-color: var(--text-muted);
   border-radius: 3px;
 }
