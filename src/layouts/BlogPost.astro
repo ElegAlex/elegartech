@@ -98,8 +98,10 @@ const readingTime = Math.ceil(post.body.split(/\s+/).length / 200);
       </div>
 
       {toc && headings.length > 0 && (
-        <aside class="hidden lg:block">
-          <TOC headings={headings} />
+        <aside class="hidden lg:block relative">
+          <div class="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto toc-scroll">
+            <TOC headings={headings} />
+          </div>
         </aside>
       )}
     </div>
