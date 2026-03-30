@@ -14,10 +14,11 @@ const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
     <h2 class="text-sm font-semibold mb-3 text-[var(--text-muted)] uppercase tracking-wide shrink-0">
       Sommaire
     </h2>
-    <ul class="space-y-2 text-sm border-l border-[var(--code-border)] overflow-y-auto overscroll-contain min-h-0 toc-scroll">
+    <ul class="space-y-2 text-sm border-l border-[var(--code-border)] overflow-y-auto overscroll-contain min-h-0 toc-scroll" dir="rtl">
       {tocHeadings.map((heading) => (
         <li
           class={heading.depth === 3 ? 'ml-4' : ''}
+          dir="ltr"
         >
           <a
             href={`#${heading.slug}`}
