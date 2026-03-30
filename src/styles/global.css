@@ -229,25 +229,6 @@
     display: none;
   }
 
-  /* TOC scrollbar: thin and visible */
-  .toc-scroll {
-    scrollbar-width: thin;
-    scrollbar-color: var(--text-muted) transparent;
-  }
-
-  .toc-scroll::-webkit-scrollbar {
-    width: 5px;
-  }
-
-  .toc-scroll::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .toc-scroll::-webkit-scrollbar-thumb {
-    background-color: var(--text-muted);
-    border-radius: 3px;
-  }
-
   /* Gradient text */
   .text-gradient {
     background: linear-gradient(to right, var(--accent-primary), var(--accent-success));
@@ -255,6 +236,25 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+}
+
+/* TOC scrollbar: thin and always visible */
+.toc-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-muted) transparent;
+}
+
+.toc-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.toc-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.toc-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--text-muted);
+  border-radius: 3px;
 }
 
 /* Print styles */
