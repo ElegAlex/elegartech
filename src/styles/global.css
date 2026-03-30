@@ -229,14 +229,19 @@
     display: none;
   }
 
-  /* Thin scrollbar for TOC */
+  /* TOC scrollbar: thin, on the left side */
   .toc-scroll {
+    direction: rtl;
     scrollbar-width: thin;
-    scrollbar-color: var(--code-border) transparent;
+    scrollbar-color: var(--text-muted) transparent;
+  }
+
+  .toc-scroll > * {
+    direction: ltr;
   }
 
   .toc-scroll::-webkit-scrollbar {
-    width: 4px;
+    width: 5px;
   }
 
   .toc-scroll::-webkit-scrollbar-track {
@@ -244,8 +249,8 @@
   }
 
   .toc-scroll::-webkit-scrollbar-thumb {
-    background-color: var(--code-border);
-    border-radius: 2px;
+    background-color: var(--text-muted);
+    border-radius: 3px;
   }
 
   /* Gradient text */
